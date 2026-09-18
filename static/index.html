@@ -3,30 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>PCS 스케줄 달력</title>
 <style>
   :root{
-    --bg:#f4f6fa; --panel:#ffffff; --ink:#1a2233; --muted:#69748a;
-    --line:#dfe4ee; --accent:#1f5fd0; --accent-soft:#e8f0ff;
-    --today:#fff6d6; --sun:#d94040; --sat:#3a6fd8;
-    --r1:#1f5fd0; --r2:#0f9d76; --r3:#d1671a; --r4:#8b46c8;
-    --shadow:0 1px 3px rgba(20,30,60,.08), 0 8px 24px rgba(20,30,60,.06);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#0f141d; --panel:#171e2a; --ink:#e8ecf4; --muted:#93a0b6;
-      --line:#28313f; --accent:#6aa3ff; --accent-soft:#1d2a40;
-      --today:#3a3416; --sun:#ff7b7b; --sat:#7fa8ff;
-      --r1:#6aa3ff; --r2:#3ecfa4; --r3:#ffa04d; --r4:#c08cf0;
-      --shadow:0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0f141d; --panel:#171e2a; --ink:#e8ecf4; --muted:#93a0b6;
-    --line:#28313f; --accent:#6aa3ff; --accent-soft:#1d2a40;
-    --today:#3a3416; --sun:#ff7b7b; --sat:#7fa8ff;
-    --r1:#6aa3ff; --r2:#3ecfa4; --r3:#ffa04d; --r4:#c08cf0;
-    --shadow:0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    color-scheme:light;
+    --bg:#ffffff; --panel:#ffffff; --ink:#111827; --muted:#5b6575;
+    --line:#d8dee9; --accent:#0d5bef; --accent-soft:#e6efff;
+    --today:#fff3bf; --sun:#e11d48; --sat:#1d4ed8;
+    /* 항로 색 - 색상환에서 고르게 떨어뜨린 8가지. 5개 이상 등록해도 겹치지 않는다. */
+    --r1:#0d5bef; --r2:#00a35c; --r3:#f2701b; --r4:#8b2fd6;
+    --r5:#e01b45; --r6:#0396c8; --r7:#d61f8f; --r8:#74a800;
+    --shadow:0 1px 3px rgba(17,24,39,.10), 0 8px 24px rgba(17,24,39,.07);
   }
   *{box-sizing:border-box}
   body{
@@ -67,13 +55,16 @@
     border-radius:999px; padding:5px 12px; font-size:12.5px; font-weight:600;
   }
   .chip .dot{width:9px; height:9px; border-radius:50%; background:var(--c);}
-  .chip .n{color:var(--muted); font-weight:500; font-variant-numeric:tabular-nums;}
-  .chip[aria-pressed="true"]{border-color:var(--c); background:color-mix(in srgb, var(--c) 12%, transparent);}
-  .chip[aria-pressed="false"]{opacity:.45;}
+  .chip .n{font-weight:600;}
+  .chip[aria-pressed="true"]{border-color:var(--c); background:var(--c); color:#fff;}
+  .chip[aria-pressed="true"] .dot{background:#fff;}
+  .chip[aria-pressed="false"]{background:var(--panel); color:var(--muted);}
+  .chip[aria-pressed="false"]:hover{border-color:var(--c); color:var(--ink);}
   .chip.err{border-style:dashed;}
 
   /* ---- 달력 ---- */
   .calbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 10px;}
+  .calbar[hidden]{display:none;}
   .calbar h2{font-size:16px; margin:0; font-variant-numeric:tabular-nums;}
   .nav{display:flex; gap:6px;}
   .nav button{
@@ -110,15 +101,15 @@
 
   .ev{
     display:block; width:100%; text-align:left; font:inherit; cursor:pointer;
-    border:0; border-left:3px solid var(--c); border-radius:4px;
-    background:color-mix(in srgb, var(--c) 11%, transparent);
+    border:0; border-left:4px solid var(--c); border-radius:4px;
+    background:color-mix(in srgb, var(--c) 45%, #fff);
     color:var(--ink); padding:3px 5px; margin-bottom:3px;
     font-size:11.5px; font-weight:700; line-height:1.32;
     white-space:normal; overflow-wrap:anywhere;
   }
-  .ev:hover{background:color-mix(in srgb, var(--c) 24%, transparent);}
-  .ev .t{display:block; font-weight:500; font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums;}
-  .ev.done{opacity:.5;}
+  .ev:hover{background:color-mix(in srgb, var(--c) 65%, #fff);}
+  .ev .t{display:block; font-weight:600; font-size:10.5px; color:color-mix(in srgb, var(--c) 30%, #10151d); font-variant-numeric:tabular-nums;}
+  .ev.done{opacity:.62;}
   .more{font-size:11px; color:var(--muted); padding:1px 5px; cursor:pointer; background:0; border:0; font-family:inherit;}
 
   /* ---- 상태/모달 ---- */
@@ -227,7 +218,8 @@
 </div>
 
 <script>
-const COLORS = ["var(--r1)","var(--r2)","var(--r3)","var(--r4)"];
+const COLORS = ["var(--r1)","var(--r2)","var(--r3)","var(--r4)",
+                "var(--r5)","var(--r6)","var(--r7)","var(--r8)"];
 const DOW = ["일","월","화","수","목","금","토"];
 const $ = s => document.querySelector(s);
 
@@ -235,7 +227,7 @@ let snapshots = [];      // 저장된 스냅샷 목록
 let snap = null;         // 현재 표시 중인 스냅샷
 let session = "AM";
 let basis = "etd";
-let hidden = new Set();  // 숨긴 항로 index
+let shown = new Set();   // 달력에 표시할 항로 index (비어 있으면 아무것도 표시 안 함)
 let cursor = null;       // 보고 있는 달 {y, m}
 
 const pad = n => String(n).padStart(2,"0");
@@ -300,7 +292,7 @@ async function load(){
     return;
   }
   snap = got;
-  hidden.clear();
+  shown.clear();   // 스냅샷을 바꾸면 선택도 초기화한다
   cursor = null;
   render();
 }
@@ -313,15 +305,15 @@ function render(){
   // 항로 칩
   $("#chips").innerHTML = snap.routes.map((r,i)=>{
     const c = COLORS[i % COLORS.length];
-    const on = !hidden.has(i);
-    const n = r.ok ? `${r.vessels.length}건` : "조회실패";
+    const on = shown.has(i);
+    const st = r.ok ? "" : `<span class="n">조회실패</span>`;
     return `<button class="chip${r.ok?"":" err"}" style="--c:${c}" data-i="${i}" aria-pressed="${on}">
-      <span class="dot"></span>${routeKey(r)}<span class="n">${n}</span></button>`;
+      <span class="dot"></span>${routeKey(r)}${st}</button>`;
   }).join("");
   $("#chips").querySelectorAll(".chip").forEach(b=>{
     b.onclick = () => {
       const i = +b.dataset.i;
-      hidden.has(i) ? hidden.delete(i) : hidden.add(i);
+      shown.has(i) ? shown.delete(i) : shown.add(i);
       render();
     };
   });
@@ -351,7 +343,7 @@ function collect(){
   const q = $("#q").value.trim().toUpperCase();
   const out = [];
   snap.routes.forEach((r,i)=>{
-    if(hidden.has(i) || !r.ok) return;
+    if(!shown.has(i) || !r.ok) return;
     const c = COLORS[i % COLORS.length];
     r.vessels.forEach(v=>{
       const date = basis==="etd" ? v.etd_date : v.eta_date;
@@ -407,7 +399,9 @@ function drawCalendar(events){
 
   if(!events.length){
     $("#calbar").hidden = true;
-    $("#view").innerHTML = `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로·검색어에 해당하는 스케줄이 없습니다.</div>`;
+    $("#view").innerHTML = shown.size === 0
+      ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 해당 구간의 스케줄이 달력에 표시됩니다.</div>`
+      : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로·검색어에 해당하는 스케줄이 없습니다.</div>`;
     return;
   }
 
