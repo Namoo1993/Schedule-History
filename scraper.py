@@ -220,7 +220,9 @@ def to_vessel(row):
         "pol_name": (row.get("LD_PORTD") or "").strip(),
         "pod_name": (row.get("DC_PORTD") or "").strip(),
         "direct": (row.get("TS_MIN") or "").strip() == "D",
-        "closed": (row.get("VSL_CLOSE") or "").strip() == "T",
+        # VSL_CLOSE 는 부킹 마감 여부가 아니라 출항 예정(T) / 출항 완료(F) 구분이다.
+        # (조회 시점 기준으로 과거 항차는 전부 F, 미래 항차는 전부 T 로 확인함)
+        "upcoming": (row.get("VSL_CLOSE") or "").strip() == "T",
     }
 
 

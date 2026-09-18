@@ -118,7 +118,7 @@
   }
   .ev:hover{background:color-mix(in srgb, var(--c) 24%, transparent);}
   .ev .t{display:block; font-weight:500; font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums;}
-  .ev.closed{text-decoration:line-through; opacity:.55;}
+  .ev.done{opacity:.5;}
   .more{font-size:11px; color:var(--muted); padding:1px 5px; cursor:pointer; background:0; border:0; font-family:inherit;}
 
   /* ---- 상태/모달 ---- */
@@ -148,11 +148,28 @@
   .db footer button{font:inherit; font-size:13px; padding:7px 18px; border-radius:8px;
     border:1px solid var(--line); background:var(--accent); color:#fff; cursor:pointer; font-weight:600;}
 
+  /* ---- 좁은 화면용 목록 ---- */
+  .list{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    box-shadow:var(--shadow); overflow:hidden;}
+  .day{display:flex; gap:11px; padding:10px 12px; border-bottom:1px solid var(--line);}
+  .day:last-child{border-bottom:0}
+  .day.today{background:var(--today);}
+  .day .d{flex:0 0 52px; text-align:center; padding-top:2px;}
+  .day .d .num{display:block; font-size:19px; font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums;}
+  .day .d .dw{display:block; font-size:11px; color:var(--muted); margin-top:1px;}
+  .day.s0 .d .num{color:var(--sun)} .day.s6 .d .num{color:var(--sat)}
+  .day .items{flex:1 1 auto; min-width:0;}
+  .day .items .ev{font-size:13px; padding:6px 9px; margin-bottom:5px; border-left-width:4px;}
+  .day .items .ev:last-child{margin-bottom:0}
+  .day .items .ev .t{font-size:11.5px;}
+
   @media (max-width:860px){
     .wrap{padding:16px 12px;}
-    table.cal td{height:auto; min-height:76px;}
-    .ev{font-size:10.5px;}
     h1{width:100%}
+    .calbar{flex-wrap:wrap}
+    .row{gap:10px 12px}
+    label.f{flex:1 1 auto}
+    select,input[type=search]{flex:1 1 auto; min-width:0}
   }
 </style>
 </head>
@@ -347,6 +364,30 @@ function collect(){
   return out;
 }
 
+const isNarrow = () => window.innerWidth < 760;
+
+// 좁은 화면(휴대폰)에서는 격자 대신 날짜별 목록으로 보여준다.
+function drawList(events, byDate, todayKey){
+  const {y,m} = cursor;
+  const days = Object.keys(byDate).filter(d => d.startsWith(`${y}-${pad(m)}`)).sort();
+  if(!days.length){
+    $("#view").innerHTML = `<div class="note"><b>${y}년 ${m}월에는 스케줄이 없습니다.</b>다른 달을 확인해 보세요.</div>`;
+    return;
+  }
+  $("#view").innerHTML = `<div class="list">` + days.map(key=>{
+    const dt = new Date(+key.slice(0,4), +key.slice(5,7)-1, +key.slice(8,10));
+    const w = dt.getDay();
+    return `<div class="day s${w}${key===todayKey?" today":""}">
+      <div class="d"><span class="num">${dt.getDate()}</span><span class="dw">${DOW[w]}</span></div>
+      <div class="items">${byDate[key].map(e=>{
+        const t = (basis==="etd"? e.etd : e.eta) || "";
+        return `<button class="ev${e.upcoming===false?" done":""}" style="--c:${e.color}"
+                  data-k="${e.vslvoy}|${e.etd}|${e.ri}">${e.label}
+                  <span class="t">${t.slice(11)} · ${e.routeLabel}</span></button>`;
+      }).join("")}</div></div>`;
+  }).join("") + `</div>`;
+}
+
 function drawCalendar(events){
   $("#calbar").hidden = false;
   const {y,m} = cursor;
@@ -363,6 +404,18 @@ function drawCalendar(events){
   const first = new Date(y, m-1, 1);
   const start = new Date(first); start.setDate(1 - first.getDay());
   const todayKey = (()=>{const t=new Date(); return ymd(t.getFullYear(), t.getMonth()+1, t.getDate());})();
+
+  if(!events.length){
+    $("#calbar").hidden = true;
+    $("#view").innerHTML = `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로·검색어에 해당하는 스케줄이 없습니다.</div>`;
+    return;
+  }
+
+  if(isNarrow()){
+    drawList(events, byDate, todayKey);
+    bindEvents(events, byDate);
+    return;
+  }
 
   let html = "<table class='cal'><thead><tr>" +
     DOW.map((d,i)=>`<th class="s${i}">${d}</th>`).join("") + "</tr></thead><tbody>";
@@ -386,7 +439,7 @@ function drawCalendar(events){
       html += `<div class="dn s${i}">${cell.getDate()}${isToday?'<span class="badge">TODAY</span>':""}</div>`;
       list.slice(0,4).forEach(e=>{
         const t = (basis==="etd"? e.etd : e.eta) || "";
-        html += `<button class="ev${e.closed?" closed":""}" style="--c:${e.color}" data-k="${e.vslvoy}|${e.etd}|${e.ri}"
+        html += `<button class="ev${e.upcoming===false?" done":""}" style="--c:${e.color}" data-k="${e.vslvoy}|${e.etd}|${e.ri}"
                    title="${e.label} / ${e.route}\n${e.pol_name} → ${e.pod_name}">
                    ${e.label} <span class="t">${t.slice(11)}</span></button>`;
       });
@@ -397,13 +450,11 @@ function drawCalendar(events){
     html += "</tr>";
   }
   html += "</tbody></table>";
-
-  if(!events.length){
-    html = `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로·검색어에 해당하는 스케줄이 없습니다.</div>`;
-    $("#calbar").hidden = true;
-  }
   $("#view").innerHTML = html;
+  bindEvents(events, byDate);
+}
 
+function bindEvents(events, byDate){
   $("#view").querySelectorAll(".ev").forEach(b=>{
     b.onclick = () => {
       const [vslvoy, etd, ri] = b.dataset.k.split("|");
@@ -417,7 +468,7 @@ function drawCalendar(events){
       byDate[b.dataset.d].slice(4).forEach(e=>{
         const t=(basis==="etd"? e.etd : e.eta)||"";
         const el=document.createElement("button");
-        el.className="ev"+(e.closed?" closed":""); el.style.setProperty("--c", e.color);
+        el.className="ev"+(e.upcoming===false?" done":""); el.style.setProperty("--c", e.color);
         el.innerHTML=`${e.label} <span class="t">${t.slice(11)}</span>`;
         el.title=`${e.label} / ${e.route}\n${e.pol_name} → ${e.pod_name}`;
         el.onclick=()=>openDetail(e);
@@ -440,7 +491,7 @@ function openDetail(e){
     <dt>도착 ETA</dt><dd>${e.eta || "-"}</dd>
     <dt>구간</dt><dd>${e.routeLabel}</dd>
     <dt>운송형태</dt><dd>${e.direct ? "직항 (D)" : "환적 (T)"}</dd>
-    <dt>마감</dt><dd>${e.closed ? "마감됨" : "부킹 가능"}</dd>`;
+    <dt>운항상태</dt><dd>${e.upcoming===false ? "출항 완료" : "출항 예정"}</dd>`;
   $("#dlg").showModal();
 }
 
@@ -454,6 +505,12 @@ $("#prev").onclick = () => { cursor.m--; if(cursor.m<1){cursor.m=12;cursor.y--;}
 $("#next").onclick = () => { cursor.m++; if(cursor.m>12){cursor.m=1;cursor.y++;} render(); };
 $("#todayBtn").onclick = () => { const t=new Date(); cursor={y:t.getFullYear(), m:t.getMonth()+1}; render(); };
 $("#dClose").onclick = () => $("#dlg").close();
+
+// 화면 폭이 격자/목록 경계를 넘어갈 때만 다시 그린다
+let wasNarrow = isNarrow();
+window.addEventListener("resize", () => {
+  if(isNarrow() !== wasNarrow){ wasNarrow = isNarrow(); if(snap) render(); }
+});
 
 init();
 </script>

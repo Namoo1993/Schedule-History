@@ -3,7 +3,7 @@
   "date": "2026-09-18",
   "session": "AM",
   "session_kor": "오전",
-  "collected_at": "2026-09-18 10:44:09",
+  "collected_at": "2026-09-18 10:50:53",
   "months": [
     "202609",
     "202610",
@@ -33,7 +33,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "PANCON GLORY 2626E",
@@ -48,7 +48,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "ZHONG SHENG TUO HAI 2624N",
@@ -63,7 +63,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "PANCON GLORY 2627E",
@@ -78,7 +78,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS GLORY 2622E",
@@ -93,7 +93,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "ZHONG SHENG TUO HAI 2625N",
@@ -108,7 +108,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2628E",
@@ -123,22 +123,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
-        },
-        {
-          "label": "ZHONG SHENG TUO HAI 2626N",
-          "vessel": "ZHONG SHENG TUO HAI",
-          "voyage": "2626N",
-          "vslvoy": "JZST2626N",
-          "route": "IS2",
-          "etd_date": "2026-10-03",
-          "etd": "2026-10-03 19:30",
-          "eta_date": "2026-10-05",
-          "eta": "2026-10-05 16:30",
-          "pol_name": "CHINA, SHANGHAI",
-          "pod_name": "KOREA, INCHEON",
-          "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2629E",
@@ -153,7 +138,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS GLORY 2623E",
@@ -168,7 +153,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2621N",
@@ -183,7 +168,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2630E",
@@ -198,7 +183,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2622N",
@@ -213,7 +198,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2631E",
@@ -228,7 +213,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2621E",
@@ -243,7 +228,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2623N",
@@ -258,7 +243,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2632E",
@@ -273,7 +258,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2622E",
@@ -288,7 +273,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2624N",
@@ -303,7 +288,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2623E",
@@ -318,7 +303,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2634E",
@@ -333,7 +318,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2625N",
@@ -348,7 +333,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2636E",
@@ -363,7 +348,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2624E",
@@ -378,7 +363,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2626N",
@@ -393,7 +378,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2637E",
@@ -408,7 +393,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2625E",
@@ -423,7 +408,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2627N",
@@ -438,7 +423,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2638E",
@@ -453,7 +438,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2626E",
@@ -468,7 +453,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2628N",
@@ -483,7 +468,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2639E",
@@ -498,7 +483,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         }
       ]
     },
@@ -523,7 +508,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "EASLINE KWANGYANG 2632E",
@@ -538,7 +523,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "ZHONG GU YING KOU 2606N",
@@ -553,7 +538,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "SONG YUN HE 0029E",
@@ -568,7 +553,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "DONGJIN ENTERPRISE 0308E",
@@ -583,7 +568,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "KMTC KEELUNG 2607N",
@@ -598,7 +583,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "EASLINE KWANGYANG 2634E",
@@ -613,7 +598,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "SONG YUN HE 0031E",
@@ -628,7 +613,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2636E",
@@ -643,7 +628,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STARSHIP PEGASUS 2612W",
@@ -658,7 +643,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0310E",
@@ -673,7 +658,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "POS LAEMCHABANG 1044W",
@@ -688,7 +673,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0032E",
@@ -703,7 +688,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2639E",
@@ -718,7 +703,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2632E",
@@ -733,7 +718,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2641E",
@@ -748,7 +733,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0311E",
@@ -763,7 +748,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2633E",
@@ -778,7 +763,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2640E",
@@ -793,7 +778,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0033E",
@@ -808,7 +793,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "ZHONG GU PENG LAI 2607N",
@@ -823,7 +808,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2642E",
@@ -838,7 +823,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0312E",
@@ -853,7 +838,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2634E",
@@ -868,7 +853,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "ZHONG GU YING KOU 2607N",
@@ -883,7 +868,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2641E",
@@ -898,7 +883,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0034E",
@@ -913,7 +898,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0313E",
@@ -928,7 +913,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "KMTC KEELUNG 2608N",
@@ -943,7 +928,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2635E",
@@ -958,7 +943,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2643E",
@@ -973,7 +958,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0036E",
@@ -988,7 +973,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2642E",
@@ -1003,7 +988,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0314E",
@@ -1018,7 +1003,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2636E",
@@ -1033,7 +1018,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2644E",
@@ -1048,7 +1033,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0037E",
@@ -1063,7 +1048,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2643E",
@@ -1078,7 +1063,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0315E",
@@ -1093,7 +1078,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2637E",
@@ -1108,7 +1093,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2645E",
@@ -1123,7 +1108,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0038E",
@@ -1138,7 +1123,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2644E",
@@ -1153,7 +1138,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0316E",
@@ -1168,7 +1153,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2646E",
@@ -1183,7 +1168,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2638E",
@@ -1198,7 +1183,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0039E",
@@ -1213,7 +1198,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2645E",
@@ -1228,7 +1213,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "ZHONG GU PENG LAI 2608N",
@@ -1243,7 +1228,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0317E",
@@ -1258,7 +1243,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "KMTC KEELUNG 2609N",
@@ -1273,7 +1258,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2647E",
@@ -1288,7 +1273,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2639E",
@@ -1303,7 +1288,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "ZHONG GU YING KOU 2608N",
@@ -1318,7 +1303,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0040E",
@@ -1333,7 +1318,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0318E",
@@ -1348,7 +1333,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2648E",
@@ -1363,7 +1348,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2640E",
@@ -1378,7 +1363,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2646E",
@@ -1393,7 +1378,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0041E",
@@ -1408,7 +1393,7 @@
           "pol_name": "CHINA, SHANGHAI",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         }
       ]
     },
@@ -1433,7 +1418,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "ZHONG SHENG TUO HAI 2624N",
@@ -1443,12 +1428,12 @@
           "route": "IS2",
           "etd_date": "2026-09-13",
           "etd": "2026-09-13 05:00",
-          "eta_date": "2026-09-16",
-          "eta": "2026-09-16 23:30",
+          "eta_date": "2026-09-17",
+          "eta": "2026-09-17 07:30",
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "PEGASUS GLORY 2622E",
@@ -1463,7 +1448,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "ZHONG SHENG TUO HAI 2625N",
@@ -1471,14 +1456,14 @@
           "voyage": "2625N",
           "vslvoy": "JZST2625N",
           "route": "IS2",
-          "etd_date": "2026-09-25",
-          "etd": "2026-09-25 18:30",
-          "eta_date": "2026-09-29",
-          "eta": "2026-09-29 13:00",
+          "etd_date": "2026-09-24",
+          "etd": "2026-09-24 19:00",
+          "eta_date": "2026-09-28",
+          "eta": "2026-09-28 13:00",
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2628E",
@@ -1493,7 +1478,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS GLORY 2623E",
@@ -1508,7 +1493,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2629E",
@@ -1523,7 +1508,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2621N",
@@ -1538,7 +1523,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2630E",
@@ -1553,7 +1538,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2620E",
@@ -1568,7 +1553,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2622N",
@@ -1583,7 +1568,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2631E",
@@ -1598,7 +1583,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2621E",
@@ -1613,7 +1598,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2623N",
@@ -1628,7 +1613,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2632E",
@@ -1643,7 +1628,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2622E",
@@ -1658,7 +1643,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2624N",
@@ -1673,7 +1658,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2623E",
@@ -1688,7 +1673,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2634E",
@@ -1703,7 +1688,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2625N",
@@ -1718,7 +1703,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2636E",
@@ -1733,7 +1718,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2624E",
@@ -1748,7 +1733,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2626N",
@@ -1763,7 +1748,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2637E",
@@ -1778,7 +1763,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2625E",
@@ -1793,7 +1778,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2627N",
@@ -1808,7 +1793,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2638E",
@@ -1823,7 +1808,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PEGASUS TERA 2626E",
@@ -1838,7 +1823,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SUNNY LAUREL 2628N",
@@ -1853,7 +1838,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PANCON GLORY 2639E",
@@ -1868,7 +1853,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, INCHEON",
           "direct": true,
-          "closed": true
+          "upcoming": true
         }
       ]
     },
@@ -1893,7 +1878,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "DONGJIN ENTERPRISE 0308E",
@@ -1908,7 +1893,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "STAR PIONEER 2629E",
@@ -1923,7 +1908,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "EASLINE KWANGYANG 2634E",
@@ -1938,7 +1923,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "STAR PIONEER 2630E",
@@ -1953,7 +1938,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": false
+          "upcoming": false
         },
         {
           "label": "SONG YUN HE 0031E",
@@ -1968,7 +1953,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0310E",
@@ -1983,7 +1968,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2631E",
@@ -1998,7 +1983,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2639E",
@@ -2013,7 +1998,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0032E",
@@ -2028,7 +2013,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2632E",
@@ -2043,7 +2028,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2640E",
@@ -2058,7 +2043,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0311E",
@@ -2073,7 +2058,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2633E",
@@ -2088,7 +2073,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2640E",
@@ -2103,7 +2088,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0033E",
@@ -2118,7 +2103,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0312E",
@@ -2133,7 +2118,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2634E",
@@ -2148,7 +2133,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2641E",
@@ -2163,7 +2148,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0034E",
@@ -2178,7 +2163,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0313E",
@@ -2193,7 +2178,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0036E",
@@ -2208,7 +2193,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2642E",
@@ -2223,7 +2208,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2635E",
@@ -2238,7 +2223,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0314E",
@@ -2253,7 +2238,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0037E",
@@ -2268,7 +2253,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2643E",
@@ -2283,7 +2268,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2636E",
@@ -2298,7 +2283,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2644E",
@@ -2313,7 +2298,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0315E",
@@ -2328,7 +2313,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0038E",
@@ -2343,7 +2328,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2644E",
@@ -2358,7 +2343,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2637E",
@@ -2373,7 +2358,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2645E",
@@ -2388,7 +2373,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0316E",
@@ -2403,7 +2388,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0039E",
@@ -2418,7 +2403,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2645E",
@@ -2433,7 +2418,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2646E",
@@ -2448,7 +2433,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2638E",
@@ -2463,7 +2448,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0317E",
@@ -2478,7 +2463,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0040E",
@@ -2493,7 +2478,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2647E",
@@ -2508,7 +2493,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2639E",
@@ -2523,7 +2508,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0318E",
@@ -2538,7 +2523,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "EASLINE KWANGYANG 2646E",
@@ -2553,7 +2538,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "SONG YUN HE 0041E",
@@ -2568,7 +2553,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "PROSRICH 2648E",
@@ -2583,7 +2568,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "STAR PIONEER 2640E",
@@ -2598,7 +2583,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         },
         {
           "label": "DONGJIN ENTERPRISE 0319E",
@@ -2613,7 +2598,7 @@
           "pol_name": "CHINA, NINGBO",
           "pod_name": "KOREA, BUSAN",
           "direct": true,
-          "closed": true
+          "upcoming": true
         }
       ]
     }
