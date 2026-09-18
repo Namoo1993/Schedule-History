@@ -199,8 +199,10 @@
       </select>
     </label>
 
-    <label class="f">검색
-      <input type="search" id="q" placeholder="선명 / 항차 / 노선">
+    <label class="f">모선명
+      <input type="search" id="q" list="vesselList" autocomplete="off"
+             placeholder="예: PANCON GLORY">
+      <datalist id="vesselList"></datalist>
     </label>
   </div>
   <div class="chips" id="chips"></div>
@@ -250,6 +252,7 @@ let shown = new Set();   // 달력에 표시할 항로 index (비어 있으면 �
 let cursor = null;       // 보고 있는 달 {y, m}
 let country = null;      // 칩 목록에 보여줄 출발 국가 (null 이면 첫 국가로 정한다)
 
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const pad = n => String(n).padStart(2,"0");
 const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
 const routeKey = r => `${r.pol}→${r.pod}`;
@@ -313,6 +316,12 @@ async function load(){
   }
   snap = got;
   shown.clear();   // 스냅샷을 바꾸면 선택도 초기화한다
+  $("#q").value = "";
+  // 모선명 자동완성 목록. 같은 모선이 여러 구간에 있어도 이름은 하나만 넣는다.
+  const names = new Set();
+  snap.routes.forEach(r => r.ok && r.vessels.forEach(v => v.vessel && names.add(v.vessel)));
+  $("#vesselList").innerHTML =
+    [...names].sort().map(v => `<option value="${esc(v)}"></option>`).join("");
   cursor = null;
   render();
 }
@@ -392,7 +401,7 @@ function collect(){
     r.vessels.forEach(v=>{
       const date = basis==="etd" ? v.etd_date : v.eta_date;
       if(!date) return;
-      if(q && !(`${v.label} ${v.route} ${r.pol} ${r.pod}`.toUpperCase().includes(q))) return;
+      if(q && !v.label.toUpperCase().includes(q)) return;
       out.push({...v, date, color:c, ri:i, routeLabel:routeKey(r)});
     });
   });
@@ -443,9 +452,12 @@ function drawCalendar(events){
 
   if(!events.length){
     $("#calbar").hidden = true;
-    $("#view").innerHTML = shown.size === 0
-      ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 해당 구간의 스케줄이 달력에 표시됩니다.</div>`
-      : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로·검색어에 해당하는 스케줄이 없습니다.</div>`;
+    const q = $("#q").value.trim();
+    $("#view").innerHTML =
+      q             ? `<div class="note"><b>'${esc(q)}' 에 해당하는 모선이 없습니다.</b>모선명을 다시 확인해 보세요. 입력칸을 누르면 수집된 모선명 목록이 나옵니다.</div>`
+      : shown.size === 0
+                    ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 해당 구간의 스케줄이 달력에 표시됩니다.</div>`
+                    : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로에 이 달의 스케줄이 없습니다.</div>`;
     return;
   }
 
@@ -539,7 +551,18 @@ $("#btnAM").onclick = () => { session="AM"; load(); };
 $("#btnPM").onclick = () => { session="PM"; load(); };
 $("#selCountry").onchange = e => { country = e.target.value; render(); };
 $("#selBasis").onchange = e => { basis = e.target.value; render(); };
-$("#q").oninput = () => render();
+// 모선명을 입력하면 그 모선이 실린 항로를 자동으로 켠다.
+// 같은 모선이 여러 구간에 걸쳐 있으면 그 구간을 전부 켜서 나란히 보여준다.
+$("#q").oninput = () => {
+  const q = $("#q").value.trim().toUpperCase();
+  if(q && snap){
+    shown.clear();
+    snap.routes.forEach((r,i)=>{
+      if(r.ok && r.vessels.some(v => v.label.toUpperCase().includes(q))) shown.add(i);
+    });
+  }
+  render();
+};
 $("#prev").onclick = () => { cursor.m--; if(cursor.m<1){cursor.m=12;cursor.y--;} render(); };
 $("#next").onclick = () => { cursor.m++; if(cursor.m>12){cursor.m=1;cursor.y++;} render(); };
 $("#todayBtn").onclick = () => { const t=new Date(); cursor={y:t.getFullYear(), m:t.getMonth()+1}; render(); };
