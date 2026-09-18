@@ -65,12 +65,14 @@ if ($isAdmin) {
 }
 
 # --- 2. 작업 등록 ---------------------------------------------------------
+# 제한시간 90분: 설정 구간을 양방향으로 조회하므로 구간 29개면 질의 58회,
+# 질의당 약 19초라 18~20분이 걸린다. 사이트가 느린 날을 감안해 넉넉히 잡는다.
 $settings = New-ScheduledTaskSettingsSet `
     -WakeToRun `
     -StartWhenAvailable `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
+    -ExecutionTimeLimit (New-TimeSpan -Minutes 90) `
     -RestartCount 3 `
     -RestartInterval (New-TimeSpan -Minutes 10) `
     -MultipleInstances IgnoreNew

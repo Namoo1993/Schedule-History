@@ -96,6 +96,26 @@ def load_config():
     return cfg
 
 
+def route_pairs(routes, both=True):
+    """설정의 구간을 조회 순서대로 펼친다. both 면 역방향도 함께 넣는다.
+
+    설정에는 해외->한국(수입)만 적어두고, 한국->해외(수출)는 여기서 뒤집어
+    만든다. 같은 구간을 연달아 조회하면 화면에서 출발/도착만 바꾸면 되므로
+    원방향 바로 뒤에 역방향을 붙인다.
+
+    설정에 이미 역방향이 들어 있거나 출발과 도착이 같은 경우를 대비해
+    중복은 걸러낸다.
+    """
+    seen, out = set(), []
+    for r in routes:
+        a, b = r["pol"].strip().upper(), r["pod"].strip().upper()
+        for pair in ((a, b), (b, a)) if both else ((a, b),):
+            if pair[0] != pair[1] and pair not in seen:
+                seen.add(pair)
+                out.append(pair)
+    return out
+
+
 def months_from(today, count):
     """조회할 YYYYMM 목록 (이번 달 포함)."""
     out, y, m = [], today.year, today.month
@@ -366,9 +386,11 @@ def run(session=None, show=False):
     session = session.upper()
     kor = "오전" if session == "AM" else "오후"
     month_list = months_from(now.date(), cfg.get("months_ahead", 3))
+    pairs = route_pairs(cfg["routes"], cfg.get("both_directions", True))
 
     log("=" * 60)
     log("수집 시작: %s %s  (조회 월: %s)" % (now.strftime("%Y.%m.%d"), kor, ", ".join(month_list)))
+    log("조회 구간: %d개 (설정 %d개 x 양방향)" % (len(pairs), len(cfg["routes"])))
 
     snapshot = {
         "snapshot": "%s %s" % (now.strftime("%Y.%m.%d"), kor),
@@ -405,9 +427,8 @@ def run(session=None, show=False):
                     page.wait_for_timeout(5000)
             snapshot["logged_in"], snapshot["login_error"] = do_login(page, cfg.get("login", {}))
 
-            for route in cfg["routes"]:
-                pol, pod = route["pol"], route["pod"]
-                log("[%s -> %s] 조회" % (pol, pod))
+            for idx, (pol, pod) in enumerate(pairs, 1):
+                log("[%d/%d] [%s -> %s] 조회" % (idx, len(pairs), pol, pod))
                 try:
                     try:
                         snapshot["routes"].append(collect_route(page, pol, pod, month_list))
