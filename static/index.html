@@ -63,6 +63,8 @@
   .chip[aria-pressed="false"]{background:var(--panel); color:var(--muted);}
   .chip[aria-pressed="false"]:hover{border-color:var(--c); color:var(--ink);}
   .chip.err{border-style:dashed;}
+  .chip.clr{color:var(--muted); font-weight:500;}
+  .chip.clr:hover{border-color:var(--sun); color:var(--sun);}
 
   /* ---- 달력 ---- */
   .calbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 10px;}
@@ -159,7 +161,10 @@
 
   @media (max-width:860px){
     .wrap{padding:16px 12px;}
-    h1{width:100%}
+    /* 제목에 nowrap 이 걸려 있어 수집 시각 문구가 길면 화면 밖으로 밀려나
+       가로 스크롤이 생겼다. 좁은 화면에서는 줄바꿈을 허용한다. */
+    h1{width:100%; white-space:normal;}
+    h1 span{display:block; margin-left:0; margin-top:2px;}
     .calbar{flex-wrap:wrap}
     .row{gap:10px 12px}
     label.f{flex:1 1 auto}
@@ -182,6 +187,10 @@
       <button id="btnAM" aria-pressed="false">오전</button>
       <button id="btnPM" aria-pressed="false">오후</button>
     </div>
+
+    <label class="f">출발 국가
+      <select id="selCountry"></select>
+    </label>
 
     <label class="f">기준
       <select id="selBasis">
@@ -224,6 +233,13 @@
 const COLORS = ["var(--r1)","var(--r2)","var(--r3)","var(--r4)",
                 "var(--r5)","var(--r6)","var(--r7)","var(--r8)"];
 const DOW = ["일","월","화","수","목","금","토"];
+// UN/LOCODE 앞 두 자리로 출발 국가를 가른다. 없는 코드는 그대로 보여준다.
+const COUNTRY = {
+  CN:"중국", JP:"일본", VN:"베트남", TH:"태국", HK:"홍콩", TW:"대만",
+  SG:"싱가포르", MY:"말레이시아", ID:"인도네시아", PH:"필리핀", KH:"캄보디아",
+  MM:"미얀마", IN:"인도", BD:"방글라데시", LK:"스리랑카", KR:"한국",
+  RU:"러시아", US:"미국", AE:"아랍에미리트",
+};
 const $ = s => document.querySelector(s);
 
 let snapshots = [];      // 저장된 스냅샷 목록
@@ -232,6 +248,7 @@ let session = "AM";
 let basis = "etd";
 let shown = new Set();   // 달력에 표시할 항로 index (비어 있으면 아무것도 표시 안 함)
 let cursor = null;       // 보고 있는 달 {y, m}
+let country = null;      // 칩 목록에 보여줄 출발 국가 (null 이면 첫 국가로 정한다)
 
 const pad = n => String(n).padStart(2,"0");
 const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
@@ -300,20 +317,44 @@ async function load(){
   render();
 }
 
+// 출발 국가 목록을 스냅샷에서 뽑아 채운다. 항로 구성이 바뀔 때만 다시 만든다.
+function syncCountrySelect(){
+  const codes = [...new Set(snap.routes.map(r => r.pol.slice(0,2)))];
+  const el = $("#selCountry"), sig = codes.join(",");
+  if(el.dataset.sig !== sig){
+    el.dataset.sig = sig;
+    el.innerHTML = codes.map(c=>`<option value="${c}">${COUNTRY[c]||c}</option>`).join("")
+                 + `<option value="ALL">전체</option>`;
+  }
+  if(country !== "ALL" && !codes.includes(country)) country = codes[0] || "ALL";
+  el.value = country;
+}
+
 // ---------- 화면 그리기 ----------
 function render(){
   if(!snap) return;
   $("#meta").textContent = `· ${snap.snapshot} 기준 (수집 ${snap.collected_at})`;
+  syncCountrySelect();
 
-  // 항로 칩
-  $("#chips").innerHTML = snap.routes.map((r,i)=>{
-    const c = COLORS[i % COLORS.length];
+  // 항로 칩 - 고른 국가의 항로만 보여준다.
+  // 다만 이미 선택해 둔 항로는 다른 국가라도 계속 보여준다. 그러지 않으면
+  // 달력에는 떠 있는데 끄는 방법이 안 보이는 상태가 된다.
+  const vis = snap.routes.map((_,i)=>i).filter(i =>
+    country === "ALL" || snap.routes[i].pol.slice(0,2) === country || shown.has(i));
+
+  $("#chips").innerHTML = vis.map(i=>{
+    const r = snap.routes[i];
+    const c = COLORS[i % COLORS.length];   // 색은 원래 순번으로 고정한다
     const on = shown.has(i);
     const st = r.ok ? "" : `<span class="n">조회실패</span>`;
     return `<button class="chip${r.ok?"":" err"}" style="--c:${c}" data-i="${i}" aria-pressed="${on}">
       <span class="dot"></span>${routeKey(r)}${st}</button>`;
-  }).join("");
-  $("#chips").querySelectorAll(".chip").forEach(b=>{
+  }).join("") + (shown.size ? `<button class="chip clr" id="clrSel">선택 해제</button>` : "");
+
+  const clr = $("#clrSel");
+  if(clr) clr.onclick = () => { shown.clear(); render(); };
+
+  $("#chips").querySelectorAll(".chip[data-i]").forEach(b=>{
     b.onclick = () => {
       const i = +b.dataset.i;
       shown.has(i) ? shown.delete(i) : shown.add(i);
@@ -496,6 +537,7 @@ function openDetail(e){
 $("#selDate").onchange = load;
 $("#btnAM").onclick = () => { session="AM"; load(); };
 $("#btnPM").onclick = () => { session="PM"; load(); };
+$("#selCountry").onchange = e => { country = e.target.value; render(); };
 $("#selBasis").onchange = e => { basis = e.target.value; render(); };
 $("#q").oninput = () => render();
 $("#prev").onclick = () => { cursor.m--; if(cursor.m<1){cursor.m=12;cursor.y--;} render(); };
