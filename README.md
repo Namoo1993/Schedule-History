@@ -74,14 +74,68 @@ Windows 작업 스케줄러에 2개가 등록됩니다.
 
 ---
 
-## 3. PC가 꺼져 있었다면
+## 3. GitHub Actions (PC 전원과 무관하게 수집)
 
-작업 스케줄러에 **"놓친 작업 실행"(StartWhenAvailable)** 을 켜 두었습니다.
-09:00에 PC가 꺼져 있었다면 켜진 직후 자동으로 수집하고, 이때도 이름은 예약된
-시간대(**오전**)로 저장됩니다. 실패 시 10분 간격으로 3회까지 재시도합니다.
+GitHub 서버가 매일 **09:00 / 18:00 (한국시간)** 에 알아서 수집하고,
+결과 달력을 인터넷 주소로 올려줍니다. PC가 꺼져 있어도 상관없고, 휴대폰에서도 보입니다.
 
-> PC 전원과 완전히 무관하게 돌리려면 클라우드(GitHub Actions 등)로 옮겨야 합니다.
-> 지금 구조 그대로 옮길 수 있으니 필요하면 말씀 주세요.
+### 최초 1회 설정
+
+**① GitHub 에서 저장소 만들기**
+[github.com/new](https://github.com/new) → 이름 `pcs-schedule` → **Public** 선택
+→ README·.gitignore·license는 **모두 체크 해제** → Create repository
+
+**② 코드 올리기** (명령 프롬프트에서)
+```
+cd C:\Users\USER\pcs-schedule
+git remote add origin https://github.com/<내아이디>/pcs-schedule.git
+git push -u origin main
+```
+처음 한 번은 브라우저 로그인 창이 뜹니다.
+
+**③ 로그인 계정 등록**
+저장소 → **Settings** → Secrets and variables → **Actions** → New repository secret
+
+| Name | Secret |
+|---|---|
+| `PCS_ID` | PCS 사이트 아이디 |
+| `PCS_PW` | PCS 사이트 비밀번호 |
+
+> 이 값은 GitHub 이 암호화해서 보관하고, 화면에도 로그에도 다시 표시되지 않습니다.
+> 저장소가 Public 이어도 Secrets 는 남이 볼 수 없습니다.
+
+**④ 달력 주소 켜기**
+저장소 → **Settings** → **Pages** → Source 를 **GitHub Actions** 로 선택
+
+**⑤ 첫 실행**
+저장소 → **Actions** 탭 → 왼쪽 `PCS 스케줄 수집` → **Run workflow** → 오전/오후 선택 → 실행
+2~3분 뒤 달력 주소가 열립니다:
+
+```
+https://<내아이디>.github.io/pcs-schedule/
+```
+
+이 주소를 휴대폰 홈 화면에 추가해두면 앱처럼 쓸 수 있습니다.
+
+### 이후 동작
+- 매일 09:00 / 18:00 (KST) 자동 수집 → `data/` 에 커밋 → 달력 주소 자동 갱신
+- 지금 즉시 갱신하고 싶으면 Actions 탭에서 **Run workflow**
+- 수집이 잘 됐는지는 Actions 탭의 실행 기록(초록 체크)에서 확인
+
+> GitHub 의 예약 실행은 서버가 붐빌 때 5~20분 정도 늦어질 수 있습니다. 정시 보장은 안 됩니다.
+
+### 로컬 작업 스케줄러도 같이 쓸 때
+`install_task.ps1` 로 등록한 PC 작업이 남아 있으면 같은 데이터를 두 군데서 따로 모읍니다.
+GitHub 쪽만 쓸 거라면 아래로 등록을 해제하세요.
+
+```powershell
+Unregister-ScheduledTask -TaskName PCS_Schedule_AM,PCS_Schedule_PM -Confirm:$false
+```
+
+### 로컬 작업 스케줄러 방식 (PC에서만)
+작업 스케줄러에 **"놓친 작업 실행"(StartWhenAvailable)** 이 켜져 있어서,
+09:00에 PC가 꺼져 있었다면 켜진 직후 자동으로 수집합니다. 이때도 이름은 예약된
+시간대(**오전**)로 저장되고, 실패 시 10분 간격으로 3회까지 재시도합니다.
 
 ---
 
