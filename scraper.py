@@ -219,6 +219,17 @@ def fmt_dt(day, hhmm):
     return d, "%s %s:%s" % (d, hhmm[:2], hhmm[2:])
 
 
+def keep_direct(rows):
+    """직항(D)만 남기고 환적(T)은 버린다.
+
+    화면에서 모선명 옆에 붙는 (D)/(T) 표기는 VSL_CD_TAG 값이다.
+    TS_MIN 도 D/T 를 담을 것처럼 생겼지만 조사해 보니 모든 행이 'D' 로 고정이라
+    구분에 쓸 수 없다. (실제로 CNXMN->KRINC 의 STAR FRONTIER NSFR2620N 은
+    TS_MIN='D' 이면서 VSL_CD_TAG='T' 인 환적 항차다.)
+    """
+    return [r for r in rows if (r.get("VSL_CD_TAG") or "").strip() == "D"]
+
+
 def to_vessel(row):
     """조회 결과 한 줄 -> 화면에 쓸 형태.
 
@@ -242,7 +253,8 @@ def to_vessel(row):
         "eta": eta,
         "pol_name": (row.get("LD_PORTD") or "").strip(),
         "pod_name": (row.get("DC_PORTD") or "").strip(),
-        "direct": (row.get("TS_MIN") or "").strip() == "D",
+        # 직항(D) / 환적(T). keep_direct 로 걸러내므로 남는 것은 전부 D 다.
+        "direct": (row.get("VSL_CD_TAG") or "").strip() == "D",
         # VSL_CLOSE 는 부킹 마감 여부가 아니라 출항 예정(T) / 출항 완료(F) 구분이다.
         # (조회 시점 기준으로 과거 항차는 전부 F, 미래 항차는 전부 T 로 확인함)
         "upcoming": (row.get("VSL_CLOSE") or "").strip() == "T",
@@ -269,10 +281,11 @@ def collect_route(page, pol, pod, month_list):
     log("  %s(%s) -> %s(%s)" % (pol, pol_name, pod, pod_name))
 
     data, payload = inquiry(page)
-    rows = list(data.get("dma_search", {}).get("vcursor") or [])
+    raw = list(data.get("dma_search", {}).get("vcursor") or [])
+    rows = keep_direct(raw)
     base = dict(payload["dma_search"])
     first_month = base.get("inpmon")
-    log("    %s: %d건" % (first_month, len(rows)))
+    log("    %s: %d건 중 직항 %d건" % (first_month, len(raw), len(rows)))
 
     for mon in month_list:
         if mon == first_month:
@@ -283,8 +296,9 @@ def collect_route(page, pol, pod, month_list):
         try:
             txt = page.evaluate(FETCH_MONTH_JS, [{"dma_search": req}])
             more = json.loads(txt).get("dma_search", {}).get("vcursor") or []
-            rows.extend(more)
-            log("    %s: %d건" % (mon, len(more)))
+            kept = keep_direct(more)
+            rows.extend(kept)
+            log("    %s: %d건 중 직항 %d건" % (mon, len(more), len(kept)))
         except Exception as exc:
             log("    %s: 조회 실패 (%s)" % (mon, exc))
         page.wait_for_timeout(600)
