@@ -314,8 +314,14 @@ async function load(){
     $("#calbar").hidden = true; $("#chips").innerHTML=""; $("#warn").innerHTML="";
     return;
   }
+  // 오전/오후나 날짜를 바꿔도 골라 둔 항로는 그대로 유지한다.
+  // shown 에는 항로 순번이 들어 있는데, 스냅샷마다 순번이 같다는 보장이 없으므로
+  // 구간 이름(출발→도착)으로 옮겨 적었다가 새 스냅샷에서 같은 구간을 다시 찾는다.
+  const keep = snap ? new Set([...shown].map(i => routeKey(snap.routes[i]))) : null;
+
   snap = got;
-  shown.clear();   // 스냅샷을 바꾸면 선택도 초기화한다
+  shown.clear();
+  if(keep) snap.routes.forEach((r,i) => { if(keep.has(routeKey(r))) shown.add(i); });
   $("#q").value = "";
   // 모선명 자동완성 목록. 같은 모선이 여러 구간에 있어도 이름은 하나만 넣는다.
   const names = new Set();
