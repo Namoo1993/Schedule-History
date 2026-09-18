@@ -6,10 +6,13 @@
 #   수집이 성공했을 때만 커밋/푸시한다. (scraper.py 는 0건이면 종료코드 1 을 준다)
 #
 param(
-    [ValidateSet("AM", "PM")][string]$Session = "AM",
+    # 생략하면 현재 시각으로 오전/오후를 판정한다 (배치 파일에서 인수 없이 부를 때)
+    [ValidateSet("AM", "PM", "")][string]$Session = "",
     [string]$Python = "",
     [string]$Git = ""
 )
+
+if (-not $Session) { $Session = if ((Get-Date).Hour -lt 12) { "AM" } else { "PM" } }
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $here
