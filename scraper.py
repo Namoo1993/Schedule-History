@@ -145,16 +145,39 @@ def do_login(page, login_cfg):
     return True, None
 
 
+def wait_ready(page, timeout=90000):
+    """사이트의 자바스크립트 프레임워크가 다 뜰 때까지 기다린다.
+
+    고정 시간 대기로는 네트워크가 느린 환경(해외 서버 등)에서 프레임워크가
+    올라오기 전에 다음 단계로 넘어가 메뉴를 못 찾는 문제가 있었다.
+    """
+    page.wait_for_selector(LOGIN_BTN, timeout=timeout)
+    page.wait_for_function(
+        "() => typeof com !== 'undefined' && typeof com.openMenu === 'function'",
+        timeout=timeout)
+    page.wait_for_timeout(1200)
+
+
+def describe_page(page):
+    """실패 원인 파악용 - 지금 화면이 뭔지 한 줄로 남긴다 (차단 페이지 등 식별)."""
+    try:
+        title = page.title()
+        body = re.sub(r"\s+", " ", page.evaluate("() => document.body.innerText") or "")[:300]
+        return "url=%s | title=%r | body=%r" % (page.url, title, body)
+    except Exception as exc:
+        return "화면 정보를 읽지 못함: %s" % exc
+
+
 def open_section_page(page):
     """스케줄 > 구간별 화면 열기."""
     try:
-        page.click(SCHEDULE_MENU, timeout=5000)
+        page.click(SCHEDULE_MENU, timeout=8000)
         page.wait_for_timeout(700)
-        page.click(SECTION_MENU, timeout=5000)
-    except PWTimeout:
+        page.click(SECTION_MENU, timeout=8000)
+    except Exception:
         # 드롭다운이 열리지 않으면 메뉴 anchor 가 호출하는 함수를 직접 실행
         page.evaluate(OPEN_SECTION_JS)
-    page.wait_for_selector(INQUIRY, state="visible", timeout=30000)
+    page.wait_for_selector(INQUIRY, state="visible", timeout=45000)
     page.wait_for_timeout(1500)
 
 
@@ -352,26 +375,37 @@ def run(session=None, show=False):
         page = ctx.new_page()
         page.on("dialog", lambda d: d.accept())
         try:
-            # 러너 네트워크가 느릴 수 있어 접속은 몇 번 재시도한다.
+            # 러너 네트워크가 느릴 수 있어 접속과 초기화는 몇 번 재시도한다.
             for attempt in (1, 2, 3):
                 try:
-                    page.goto(SITE, wait_until="load", timeout=90000)
+                    page.goto(SITE, wait_until="domcontentloaded", timeout=90000)
+                    wait_ready(page)
+                    log("사이트 준비 완료")
                     break
                 except Exception as exc:
-                    log("사이트 접속 실패 (%d/3): %s" % (attempt, exc))
+                    log("사이트 준비 실패 (%d/3): %s" % (attempt, exc))
+                    log("  현재 화면: %s" % describe_page(page))
                     if attempt == 3:
+                        dump_debug(page, "site_not_ready")
                         raise
                     page.wait_for_timeout(5000)
-            page.wait_for_timeout(3500)
             snapshot["logged_in"], snapshot["login_error"] = do_login(page, cfg.get("login", {}))
 
             for route in cfg["routes"]:
                 pol, pod = route["pol"], route["pod"]
                 log("[%s -> %s] 조회" % (pol, pod))
                 try:
-                    snapshot["routes"].append(collect_route(page, pol, pod, month_list))
+                    try:
+                        snapshot["routes"].append(collect_route(page, pol, pod, month_list))
+                    except Exception as first:
+                        # 화면을 처음부터 다시 띄우고 한 번 더 시도
+                        log("  1차 실패 (%s) - 화면을 다시 열고 재시도" % first)
+                        page.goto(SITE, wait_until="domcontentloaded", timeout=90000)
+                        wait_ready(page)
+                        snapshot["routes"].append(collect_route(page, pol, pod, month_list))
                 except Exception as exc:
                     log("  실패: %s" % exc)
+                    log("  현재 화면: %s" % describe_page(page))
                     traceback.print_exc()
                     dump_debug(page, "route_%s_%s" % (pol, pod))
                     snapshot["routes"].append({
