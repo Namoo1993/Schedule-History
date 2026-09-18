@@ -1,0 +1,91 @@
+name: PCS 스케줄 수집
+
+on:
+  schedule:
+    # GitHub 의 cron 은 UTC 기준. 한국시간 = UTC + 9
+    - cron: "0 0 * * *"    # 09:00 KST → 오전 스냅샷
+    - cron: "0 9 * * *"    # 18:00 KST → 오후 스냅샷
+  workflow_dispatch:        # Actions 탭에서 수동 실행
+    inputs:
+      session:
+        description: "오전(AM) / 오후(PM)"
+        type: choice
+        options: [AM, PM]
+        default: AM
+  push:
+    branches: [main]        # 코드만 고쳤을 때는 수집 없이 화면만 다시 배포
+
+permissions:
+  contents: write           # data/*.json 커밋용
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pcs-schedule
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Playwright 설치
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: 오전/오후 판정
+        id: s
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            # 00:00 UTC 트리거면 오전, 09:00 UTC 트리거면 오후
+            if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then echo "v=AM" >> $GITHUB_OUTPUT
+            else echo "v=PM" >> $GITHUB_OUTPUT; fi
+          else
+            echo "v=${{ inputs.session || 'AM' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 스케줄 수집
+        if: github.event_name != 'push'
+        env:
+          PCS_ID: ${{ secrets.PCS_ID }}
+          PCS_PW: ${{ secrets.PCS_PW }}
+        run: python scraper.py --session ${{ steps.s.outputs.v }}
+
+      - name: 결과 커밋
+        if: github.event_name != 'push'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "수집: $(TZ=Asia/Seoul date '+%Y.%m.%d') ${{ steps.s.outputs.v }}"
+            git push
+          fi
+
+      - name: 배포용 폴더 구성
+        run: |
+          mkdir -p _site
+          cp static/index.html _site/index.html
+          cp -r data _site/data
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: scrape
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,8 @@
+# 로그인 계정이 들어있는 파일 - 절대 올라가면 안 됨
+config.json
+
+logs/
+__pycache__/
+*.pyc
+_site/
+*.png
