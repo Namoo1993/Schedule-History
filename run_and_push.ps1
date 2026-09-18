@@ -16,6 +16,14 @@ Set-Location $here
 New-Item -ItemType Directory -Force (Join-Path $here "logs") | Out-Null
 $log = Join-Path $here ("logs\task_{0}.log" -f (Get-Date -Format "yyyy-MM"))
 
+# git 과 python 은 UTF-8 로 출력하는데 Windows PowerShell 5.1 은 콘솔 코드페이지
+# (한국어 환경이면 CP949)로 해석한다. 그대로 두면 로그의 한글이 깨져서 장애가 났을 때
+# 읽을 수 없다. 양쪽을 UTF-8 로 맞춘다. 콘솔이 없는 환경에서는 조용히 넘어간다.
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $env:PYTHONIOENCODING = 'utf-8'
+} catch { }
+
 function W($m) {
     $line = "[{0}] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $m
     Write-Host $line
