@@ -109,30 +109,40 @@ def months_from(today, count):
 
 # --- 페이지 조작 ----------------------------------------------------------
 def do_login(page, login_cfg):
-    """로그인. 계정이 비어 있으면 건너뛴다 (비로그인으로도 스케줄 조회는 된다)."""
+    """로그인 시도. (성공여부, 실패사유) 를 돌려준다.
+
+    로그인에 실패해도 예외를 던지지 않는다. 비로그인으로도 구간별 스케줄 조회는
+    되므로, 수집 자체를 통째로 실패시키는 대신 사유를 기록하고 계속 진행한다.
+    실패 사유는 스냅샷에 남아 뷰어 상단에 경고로 표시된다.
+    """
     if not login_cfg.get("enabled"):
         log("로그인 설정이 꺼져 있어 비로그인으로 진행합니다.")
-        return False
+        return False, "로그인 설정이 꺼져 있음"
     uid = (login_cfg.get("user_id") or "").strip()
     pwd = (login_cfg.get("password") or "").strip()
     if not uid or not pwd or uid.startswith("여기에"):
-        log("경고: config.json 에 아이디/비밀번호가 없어 비로그인으로 진행합니다.")
-        return False
+        log("경고: 아이디/비밀번호가 없어 비로그인으로 진행합니다.")
+        return False, "아이디/비밀번호가 설정되지 않음"
 
-    page.click(LOGIN_BTN)
-    page.wait_for_selector(LOGIN_ID, state="visible", timeout=20000)
-    page.fill(LOGIN_ID, uid)
-    page.fill(LOGIN_PW, pwd)
-    page.click(LOGIN_GO)
-    page.wait_for_timeout(4000)
+    try:
+        page.click(LOGIN_BTN)
+        page.wait_for_selector(LOGIN_ID, state="visible", timeout=20000)
+        page.fill(LOGIN_ID, uid)
+        page.fill(LOGIN_PW, pwd)
+        page.click(LOGIN_GO)
+        page.wait_for_timeout(4000)
+    except Exception as exc:
+        log("경고: 로그인 창을 다루지 못했습니다 (%s). 비로그인으로 계속합니다." % exc)
+        return False, "로그인 창 오류: %s" % exc
 
     if page.locator(LOGIN_ERR).count() and page.locator(LOGIN_ERR).first.is_visible():
-        raise RuntimeError("로그인 실패: 아이디/비밀번호를 확인하거나 회원승인 상태를 확인하세요.")
+        log("경고: 로그인 실패 - 아이디/비밀번호 또는 회원승인 상태를 확인하세요. 비로그인으로 계속합니다.")
+        return False, "아이디/비밀번호가 틀렸거나 회원승인이 되지 않음"
     if page.locator(LOGIN_BTN).count() and page.locator(LOGIN_BTN).first.is_visible():
         log("경고: 로그인 후에도 LOGIN 버튼이 남아 있습니다. 비로그인 상태일 수 있습니다.")
-        return False
+        return False, "로그인 후에도 LOGIN 버튼이 남아 있음"
     log("로그인 성공 (%s)" % uid)
-    return True
+    return True, None
 
 
 def open_section_page(page):
@@ -266,6 +276,21 @@ def collect_route(page, pol, pod, month_list):
 
 
 # --- 메인 ----------------------------------------------------------------
+def dump_debug(page, tag):
+    """실패 시점의 화면과 HTML 을 logs/ 에 남긴다 (GitHub Actions 에서 내려받아 확인)."""
+    try:
+        LOGS.mkdir(exist_ok=True)
+        stamp = now_kst().strftime("%H%M%S")
+        safe = re.sub(r"[^A-Za-z0-9_.-]", "_", tag)
+        png = LOGS / ("debug_%s_%s.png" % (safe, stamp))
+        htm = LOGS / ("debug_%s_%s.html" % (safe, stamp))
+        page.screenshot(path=str(png), full_page=True)
+        htm.write_text(page.content(), encoding="utf-8")
+        log("  디버그 저장: %s , %s" % (png.name, htm.name))
+    except Exception as exc:
+        log("  디버그 저장 실패: %s" % exc)
+
+
 def write_index():
     """data/index.json — 뷰어가 서버 없이(GitHub Pages) 목록을 읽을 수 있게 한다."""
     name_re = re.compile(r"^(\d{4}-\d{2}-\d{2})_(AM|PM)\.json$")
@@ -314,6 +339,7 @@ def run(session=None, show=False):
         "collected_at": now.strftime("%Y-%m-%d %H:%M:%S"),
         "months": month_list,
         "logged_in": False,
+        "login_error": None,
         "routes": [],
     }
 
@@ -324,9 +350,18 @@ def run(session=None, show=False):
         page = ctx.new_page()
         page.on("dialog", lambda d: d.accept())
         try:
-            page.goto(SITE, wait_until="load", timeout=60000)
+            # 러너 네트워크가 느릴 수 있어 접속은 몇 번 재시도한다.
+            for attempt in (1, 2, 3):
+                try:
+                    page.goto(SITE, wait_until="load", timeout=90000)
+                    break
+                except Exception as exc:
+                    log("사이트 접속 실패 (%d/3): %s" % (attempt, exc))
+                    if attempt == 3:
+                        raise
+                    page.wait_for_timeout(5000)
             page.wait_for_timeout(3500)
-            snapshot["logged_in"] = do_login(page, cfg.get("login", {}))
+            snapshot["logged_in"], snapshot["login_error"] = do_login(page, cfg.get("login", {}))
 
             for route in cfg["routes"]:
                 pol, pod = route["pol"], route["pod"]
@@ -336,11 +371,15 @@ def run(session=None, show=False):
                 except Exception as exc:
                     log("  실패: %s" % exc)
                     traceback.print_exc()
+                    dump_debug(page, "route_%s_%s" % (pol, pod))
                     snapshot["routes"].append({
                         "pol": pol, "pod": pod,
                         "pol_name": pol, "pod_name": pod,
                         "ok": False, "error": str(exc), "vessels": [],
                     })
+        except Exception:
+            dump_debug(page, "fatal")
+            raise
         finally:
             browser.close()
 

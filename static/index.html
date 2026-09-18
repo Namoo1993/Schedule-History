@@ -313,7 +313,7 @@ function render(){
   const bad = snap.routes.filter(r=>!r.ok);
   let w = "";
   if(bad.length) w += `<div class="warn">조회에 실패한 항로가 있습니다 — ${bad.map(r=>`${routeKey(r)} (${r.error||"원인 미상"})`).join(", ")}</div>`;
-  if(snap.logged_in === false) w += `<div class="warn">이 데이터는 <b>비로그인 상태</b>로 수집되었습니다. config.json 의 아이디/비밀번호를 확인하세요.</div>`;
+  if(snap.logged_in === false) w += `<div class="warn">이 데이터는 <b>비로그인 상태</b>로 수집되었습니다${snap.login_error ? ` — ${snap.login_error}` : ""}.</div>`;
   $("#warn").innerHTML = w;
 
   const events = collect();

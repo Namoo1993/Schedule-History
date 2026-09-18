@@ -57,6 +57,15 @@ jobs:
           PCS_PW: ${{ secrets.PCS_PW }}
         run: python scraper.py --session ${{ steps.s.outputs.v }}
 
+      - name: 실패 시 디버그 파일 올리기
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug
+          path: logs/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: 결과 커밋
         if: github.event_name != 'push'
         run: |

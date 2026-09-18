@@ -3,13 +3,14 @@
   "date": "2026-09-18",
   "session": "AM",
   "session_kor": "오전",
-  "collected_at": "2026-09-18 10:09:01",
+  "collected_at": "2026-09-18 10:44:09",
   "months": [
     "202609",
     "202610",
     "202611"
   ],
-  "logged_in": false,
+  "logged_in": true,
+  "login_error": null,
   "routes": [
     {
       "pol": "CNSHA",
