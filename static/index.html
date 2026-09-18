@@ -9,11 +9,13 @@
   :root{
     color-scheme:light;
     --bg:#ffffff; --panel:#ffffff; --ink:#111827; --muted:#5b6575;
-    --line:#d8dee9; --accent:#0d5bef; --accent-soft:#e6efff;
+    --line:#d8dee9; --accent:#0b4fd8; --accent-soft:#e6efff;
     --today:#fff3bf; --sun:#e11d48; --sat:#1d4ed8;
-    /* 항로 색 - 색상환에서 고르게 떨어뜨린 8가지. 5개 이상 등록해도 겹치지 않는다. */
-    --r1:#0d5bef; --r2:#00a35c; --r3:#f2701b; --r4:#8b2fd6;
-    --r5:#e01b45; --r6:#0396c8; --r7:#d61f8f; --r8:#74a800;
+    /* 항로 색 - 색상환에서 고르게 떨어뜨린 8가지.
+       일정 막대를 이 색으로 꽉 채우고 흰 글씨를 얹으므로, 흰색과의 명도차가
+       충분히 나도록 채도는 높게 두되 밝기는 낮춰 잡았다. */
+    --r1:#0b4fd8; --r2:#0a7c45; --r3:#c44e09; --r4:#7722c4;
+    --r5:#c81036; --r6:#0271a3; --r7:#b3166f; --r8:#5c7a00;
     --shadow:0 1px 3px rgba(17,24,39,.10), 0 8px 24px rgba(17,24,39,.07);
   }
   *{box-sizing:border-box}
@@ -101,15 +103,16 @@
 
   .ev{
     display:block; width:100%; text-align:left; font:inherit; cursor:pointer;
-    border:0; border-left:4px solid var(--c); border-radius:4px;
-    background:color-mix(in srgb, var(--c) 45%, #fff);
-    color:var(--ink); padding:3px 5px; margin-bottom:3px;
+    border:0; border-left:4px solid color-mix(in srgb, var(--c) 72%, #000); border-radius:4px;
+    background:var(--c);
+    color:#fff; padding:3px 5px; margin-bottom:3px;
     font-size:11.5px; font-weight:700; line-height:1.32;
     white-space:normal; overflow-wrap:anywhere;
   }
-  .ev:hover{background:color-mix(in srgb, var(--c) 65%, #fff);}
-  .ev .t{display:block; font-weight:600; font-size:10.5px; color:color-mix(in srgb, var(--c) 30%, #10151d); font-variant-numeric:tabular-nums;}
-  .ev.done{opacity:.62;}
+  .ev:hover{background:color-mix(in srgb, var(--c) 85%, #000);}
+  .ev .t{display:block; font-weight:600; font-size:10.5px; color:rgba(255,255,255,.88); font-variant-numeric:tabular-nums;}
+  /* 출항 완료 항차도 예정 항차와 똑같은 색으로 보여준다 (상태는 상세창에서 확인) */
+  .ev.done{opacity:1;}
   .more{font-size:11px; color:var(--muted); padding:1px 5px; cursor:pointer; background:0; border:0; font-family:inherit;}
 
   /* ---- 상태/모달 ---- */
