@@ -1,4 +1,4 @@
-# PCS 스케줄 자동 수집 - Windows 작업 스케줄러 등록
+﻿# PCS 스케줄 자동 수집 - Windows 작업 스케줄러 등록
 #
 #   실행 방법: 이 파일을 우클릭 → "PowerShell에서 실행"  (관리자 권한 권장)
 #             또는  powershell -ExecutionPolicy Bypass -File install_task.ps1
@@ -106,8 +106,22 @@ Get-ScheduledTask -TaskName "PCS_Schedule_*" | ForEach-Object {
     "  {0}  WakeToRun={1}  다음실행={2}" -f `
         $_.TaskName, $_.Settings.WakeToRun, (Get-ScheduledTaskInfo $_.TaskName).NextRunTime
 }
-$rtc = (powercfg /q SCHEME_CURRENT SUB_SLEEP RTCWAKE | Select-String "현재 AC|Current AC") -join ""
-Write-Host "  깨우기 타이머(AC): $rtc"
+# powercfg 출력은 Windows 표시 언어에 따라 달라지므로 한글/영문 문자열을 찾지 않고
+# 16진 값만 뽑는다. 출력 순서가 AC -> DC 라서 첫 값이 AC 설정이다.
+$hex = [regex]::Matches((powercfg /q SCHEME_CURRENT SUB_SLEEP RTCWAKE | Out-String),
+                        '0x[0-9A-Fa-f]{8}')
+if ($hex.Count -ge 1) {
+    $ac = [Convert]::ToInt32($hex[0].Value, 16)
+    $txt = @{ 0 = "사용 안 함"; 1 = "사용"; 2 = "중요한 타이머만" }[$ac]
+    if (-not $txt) { $txt = "알 수 없음($ac)" }
+    Write-Host "  깨우기 타이머(AC): $txt"
+    if ($ac -eq 0) {
+        Write-Host "    ^ 이 값이 '사용' 이 아니면 절전 중에 깨어나지 않습니다." -ForegroundColor Red
+        Write-Host "      관리자 권한 PowerShell 에서 이 스크립트를 다시 실행하세요." -ForegroundColor Red
+    }
+} else {
+    Write-Host "  깨우기 타이머(AC): 확인 실패"
+}
 
 Write-Host ""
 Write-Host "지금 바로 한 번 실행해서 확인하려면:" -ForegroundColor Green

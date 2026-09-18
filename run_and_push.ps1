@@ -1,4 +1,4 @@
-# PCS 스케줄 수집 + GitHub 반영
+﻿# PCS 스케줄 수집 + GitHub 반영
 #
 #   작업 스케줄러가 호출한다. 직접 실행할 때는:
 #       powershell -ExecutionPolicy Bypass -File run_and_push.ps1 -Session AM
