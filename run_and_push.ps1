@@ -42,9 +42,30 @@ if (-not $Git -or -not (Test-Path $Git)) {
     elseif (Test-Path "C:\Program Files\Git\cmd\git.exe") { $Git = "C:\Program Files\Git\cmd\git.exe" }
 }
 
+# --- 수집이 끝나기 전에 다시 잠들지 않게 막는다 ---------------------------
+# 타이머로 깨어난 뒤 사용자 조작이 없으면 Windows 는 '무인 절전 제한시간'(5분)
+# 뒤에 스스로 다시 잠든다. 작업 스케줄러는 실행 중인 작업을 이유로 절전을
+# 막아주지 않기 때문에, 항로가 늘어 수집이 길어지면 도중에 잘릴 수 있다.
+# SetThreadExecutionState 로 "시스템이 필요한 상태" 를 선언해 둔다.
+# 이 선언은 프로세스가 끝나면 자동으로 풀리므로 따로 해제하지 않아도 된다.
+try {
+    Add-Type -Namespace Native -Name Power -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern uint SetThreadExecutionState(uint esFlags);
+'@ -ErrorAction Stop
+    $ES_CONTINUOUS      = [uint32]2147483648   # 0x80000000
+    $ES_SYSTEM_REQUIRED = [uint32]1            # 0x00000001
+    [Native.Power]::SetThreadExecutionState($ES_CONTINUOUS -bor $ES_SYSTEM_REQUIRED) | Out-Null
+    $held = $true
+} catch {
+    $held = $false
+}
+
 W "=========================================================="
 W "$Session 수집 작업 시작"
 if (-not $Python) { W "중단: 파이썬을 찾지 못했습니다."; exit 2 }
+if ($held) { W "절전 방지 설정 적용 (수집 중 다시 잠들지 않음)" }
+else       { W "경고: 절전 방지 설정 실패. 수집이 5분을 넘기면 중단될 수 있습니다." }
 
 # --- 절전에서 깨어난 직후엔 네트워크가 아직 안 붙어 있다 -------------------
 # 무선 재연결에 보통 몇 초, 늦으면 30초 넘게 걸린다. 사이트가 응답할 때까지 기다린다.
