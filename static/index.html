@@ -66,6 +66,32 @@
   .chip.clr{color:var(--muted); font-weight:500;}
   .chip.clr:hover{border-color:var(--sun); color:var(--sun);}
 
+  /* ---- 모선 고르기 ---- */
+  .vbar{display:flex; align-items:flex-start; gap:10px; margin-top:10px; padding-top:10px;
+        border-top:1px dashed var(--line);}
+  .vbar[hidden]{display:none;}
+  .vbar .lbl{flex:0 0 auto; padding-top:5px; font-size:12px; font-weight:700; color:var(--muted);
+             white-space:nowrap;}
+  .vbar .lbl b{color:var(--ink); font-variant-numeric:tabular-nums;}
+  /* 항로를 여러 개 켜면 모선이 수십 개가 되므로 높이를 막고 안에서 굴린다 */
+  .vchips{flex:1 1 auto; display:flex; flex-wrap:wrap; gap:6px; max-height:120px; overflow:auto;}
+  .vchip{
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    border-radius:999px; padding:3px 11px 3px 7px; font-size:12px; font-weight:600;
+    max-width:100%; overflow:hidden;
+  }
+  .vchip i{flex:0 0 auto; width:10px; height:10px; border-radius:3px; background:var(--c,var(--muted));}
+  .vchip .n{color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
+  .vchip:hover{border-color:var(--accent);}
+  .vchip[aria-pressed="false"]{
+    color:var(--muted); background:color-mix(in srgb, var(--line) 18%, transparent);
+    text-decoration:line-through; text-decoration-color:var(--muted);
+  }
+  .vchip[aria-pressed="false"] i{opacity:.22;}
+  .vchip.act{padding:3px 11px; color:var(--muted); font-weight:500; text-decoration:none;}
+  .vchip.act:hover{color:var(--accent);}
+
   /* ---- 달력 ---- */
   .calbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 10px;}
   .calbar[hidden]{display:none;}
@@ -166,6 +192,9 @@
     h1{width:100%; white-space:normal;}
     h1 span{display:block; margin-left:0; margin-top:2px;}
     .calbar{flex-wrap:wrap}
+    .vbar{flex-wrap:wrap; gap:6px}
+    .vbar .lbl{flex:1 1 100%; padding-top:0}
+    .vchips{max-height:156px}
     .row{gap:10px 12px}
     label.f{flex:1 1 auto}
     select,input[type=search]{flex:1 1 auto; min-width:0}
@@ -193,7 +222,7 @@
       <button id="btnPM" aria-pressed="false">오후</button>
     </div>
 
-    <label class="f"><span id="lblCountry">출발 국가</span>
+    <label class="f"><span id="lblCountry">출발 지역</span>
       <select id="selCountry"></select>
     </label>
 
@@ -211,6 +240,10 @@
     </label>
   </div>
   <div class="chips" id="chips"></div>
+  <div class="vbar" id="vbar" hidden>
+    <span class="lbl">모선 <b id="vCount"></b></span>
+    <div class="vchips" id="vchips"></div>
+  </div>
 </header>
 
 <div id="warn"></div>
@@ -255,13 +288,16 @@ function vesselStyle(i){
   }
 }
 const DOW = ["일","월","화","수","목","금","토"];
-// UN/LOCODE 앞 두 자리로 출발 국가를 가른다. 없는 코드는 그대로 보여준다.
+// UN/LOCODE 앞 두 자리로 상대 국가를 가른다. 없는 코드는 그대로 보여준다.
 const COUNTRY = {
-  CN:"중국", JP:"일본", VN:"베트남", TH:"태국", HK:"홍콩", TW:"대만",
-  SG:"싱가포르", MY:"말레이시아", ID:"인도네시아", PH:"필리핀", KH:"캄보디아",
-  MM:"미얀마", IN:"인도", BD:"방글라데시", LK:"스리랑카", KR:"한국",
-  RU:"러시아", US:"미국", AE:"아랍에미리트",
+  CN:"중국", JP:"일본", HK:"홍콩", TW:"대만", IN:"인도", BD:"방글라데시",
+  LK:"스리랑카", KR:"한국", RU:"러시아", US:"미국", AE:"아랍에미리트",
+  SEA:"동남아",
 };
+// 동남아는 나라별로 쪼개지 않고 한 덩어리로 본다.
+const SEA_COUNTRY = new Set(["VN","TH","HK","SG","MY","ID","PH","KH","MM"]);
+// 중국 코드지만 항로 성격이 동남아 쪽인 항구들.
+const SEA_PORT = new Set(["CNSHK","CNXMN"]);
 const $ = s => document.querySelector(s);
 
 let snapshots = [];      // 저장된 스냅샷 목록
@@ -271,6 +307,7 @@ let basis = "etd";
 let shown = new Set();   // 달력에 표시할 항로 index (비어 있으면 아무것도 표시 안 함)
 let cursor = null;       // 보고 있는 달 {y, m}
 let country = null;      // 칩 목록에 보여줄 상대 국가 (null 이면 첫 국가로 정한다)
+let hiddenV = new Set(); // 달력에서 숨겨 둔 모선명. 비어 있으면 전부 보인다.
 let dirn = "IM";         // 보고 있는 방향. IM=수입(해외->한국), EX=수출(한국->해외)
 
 // 한국 쪽이 도착지면 수입, 출발지면 수출. 스냅샷에 방향이 기록돼 있지 않아도
@@ -278,7 +315,12 @@ let dirn = "IM";         // 보고 있는 방향. IM=수입(해외->한국), EX=
 const isKR = c => (c || "").slice(0,2).toUpperCase() === "KR";
 const dirOf = r => isKR(r.pol) ? "EX" : (isKR(r.pod) ? "IM" : "ETC");
 // 국가 드롭다운은 언제나 '상대 국가' 기준으로 본다 (수출이면 도착지 쪽).
-const foreignOf = r => (dirOf(r) === "EX" ? r.pod : r.pol).slice(0,2).toUpperCase();
+const foreignPort = r => (dirOf(r) === "EX" ? r.pod : r.pol).toUpperCase();
+const foreignOf = r => {
+  const port = foreignPort(r);
+  const cc = port.slice(0,2);
+  return (SEA_PORT.has(port) || SEA_COUNTRY.has(cc)) ? "SEA" : cc;
+};
 const inDir = r => dirOf(r) === dirn;
 
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -366,7 +408,7 @@ async function load(){
 function syncDirTabs(){
   const has = d => snap.routes.some(r => dirOf(r) === d);
   if(!has(dirn)) dirn = has("IM") ? "IM" : (has("EX") ? "EX" : dirn);
-  $("#lblCountry").textContent = dirn === "EX" ? "도착 국가" : "출발 국가";
+  $("#lblCountry").textContent = dirn === "EX" ? "도착 지역" : "출발 지역";
   [["#btnIM","IM"],["#btnEX","EX"]].forEach(([sel,d])=>{
     const el = $(sel);
     el.setAttribute("aria-pressed", dirn === d);
@@ -433,7 +475,12 @@ function render(){
   if(snap.logged_in === false) w += `<div class="warn">이 데이터는 <b>비로그인 상태</b>로 수집되었습니다${snap.login_error ? ` — ${snap.login_error}` : ""}.</div>`;
   $("#warn").innerHTML = w;
 
-  const events = collect();
+  // 항로에서 뽑은 전체 일정(all)로 모선 목록을 만들고, 숨긴 모선만 덜어낸 것(events)을
+  // 달력에 그린다. 색은 all 기준으로 배정돼 있으므로 모선을 껐다 켜도 색이 흔들리지 않는다.
+  const all = collect();
+  const vessels = [...new Set(all.map(e => e.vessel))].sort();
+  syncVesselChips(all, vessels);
+  const events = all.filter(e => !hiddenV.has(e.vessel));
 
   if(cursor === null){
     // 오늘이 포함된 달, 없으면 데이터가 있는 첫 달
@@ -443,7 +490,42 @@ function render(){
     const pick = months.includes(tk) ? tk : (months[0] || tk);
     cursor = {y:+pick.slice(0,4), m:+pick.slice(5,7)};
   }
-  drawCalendar(events);
+  drawCalendar(events, all.length > 0 && events.length === 0);
+}
+
+// 달력에 떠 있는 모선을 그대로 칩으로 만든다. 누르면 그 모선만 달력에서 빠진다.
+// 기본값은 '전부 보임' 이라 항로를 새로 켜서 모선이 늘어도 저절로 같이 보인다.
+function syncVesselChips(all, vessels){
+  const bar = $("#vbar"), box = $("#vchips");
+  if(!vessels.length){ bar.hidden = true; box.innerHTML = ""; return; }
+  bar.hidden = false;
+
+  const cnt = new Map(), col = new Map();
+  all.forEach(e => { cnt.set(e.vessel, (cnt.get(e.vessel)||0)+1); col.set(e.vessel, e.color); });
+  const off = vessels.filter(v => hiddenV.has(v)).length;
+  $("#vCount").textContent = off ? `${vessels.length - off}/${vessels.length}` : vessels.length;
+
+  box.innerHTML = vessels.map(v => {
+    const on = !hiddenV.has(v);
+    return `<button class="vchip" data-v="${esc(v)}" aria-pressed="${on}"
+              title="${esc(v)} · ${cnt.get(v)}항차 (누르면 ${on?"숨김":"표시"})">
+              <i style="--c:${col.get(v)}"></i>${esc(v)}<span class="n">${cnt.get(v)}</span></button>`;
+  }).join("")
+  + (off ? `<button class="vchip act" id="vAll">전체 보기</button>` : "")
+  + (off < vessels.length ? `<button class="vchip act" id="vNone">전체 숨기기</button>` : "");
+
+  box.querySelectorAll(".vchip[data-v]").forEach(b => {
+    b.onclick = () => {
+      const v = b.dataset.v;
+      hiddenV.has(v) ? hiddenV.delete(v) : hiddenV.add(v);
+      render();
+    };
+  });
+  // '전체' 버튼은 지금 목록에 있는 모선만 건드린다. 다른 항로에서 꺼 둔 모선까지
+  // 말없이 되살리면 항로를 다시 켰을 때 당황스럽다.
+  const a = $("#vAll"), n = $("#vNone");
+  if(a) a.onclick = () => { vessels.forEach(v => hiddenV.delete(v)); render(); };
+  if(n) n.onclick = () => { vessels.forEach(v => hiddenV.add(v)); render(); };
 }
 
 // 표시 대상 이벤트 모으기
@@ -496,7 +578,7 @@ function drawList(events, byDate, todayKey){
   }).join("") + `</div>`;
 }
 
-function drawCalendar(events){
+function drawCalendar(events, allHidden){
   $("#calbar").hidden = false;
   const {y,m} = cursor;
   $("#monthTitle").textContent = `${y}년 ${m}월`;
@@ -525,7 +607,8 @@ function drawCalendar(events){
       r.vessels.some(v => v.label.toUpperCase().includes(q.toUpperCase()))).length;
 
     $("#view").innerHTML =
-      q             ? `<div class="note"><b>'${esc(q)}' 에 해당하는 모선이 ${dirn==="IM"?"수입":"수출"} 구간에 없습니다.</b>` +
+      allHidden     ? `<div class="note"><b>모선을 전부 숨겼습니다.</b>위 <b>모선</b> 줄에서 보고 싶은 모선을 누르거나 <b>전체 보기</b> 를 눌러 주세요.</div>`
+      : q           ? `<div class="note"><b>'${esc(q)}' 에 해당하는 모선이 ${dirn==="IM"?"수입":"수출"} 구간에 없습니다.</b>` +
                       (inOther ? `${otherName} 탭에 ${inOther}개 구간이 있습니다. 위의 <b>${otherName}</b> 을 눌러 보세요.`
                                : `모선명을 다시 확인해 보세요. 입력칸을 누르면 수집된 모선명 목록이 나옵니다.`) + `</div>`
       : !snap.routes.some(inDir)
@@ -626,8 +709,8 @@ $("#selDate").onchange = load;
 $("#btnAM").onclick = () => { session="AM"; load(); };
 $("#btnPM").onclick = () => { session="PM"; load(); };
 // 방향을 바꿔도 반대쪽 선택은 그대로 둔다. 돌아오면 고르던 구간이 남아 있다.
-$("#btnIM").onclick = () => { dirn = "IM"; country = null; $("#q").value = ""; render(); };
-$("#btnEX").onclick = () => { dirn = "EX"; country = null; $("#q").value = ""; render(); };
+$("#btnIM").onclick = () => { dirn = "IM"; country = null; hiddenV.clear(); $("#q").value = ""; render(); };
+$("#btnEX").onclick = () => { dirn = "EX"; country = null; hiddenV.clear(); $("#q").value = ""; render(); };
 $("#selCountry").onchange = e => { country = e.target.value; render(); };
 $("#selBasis").onchange = e => { basis = e.target.value; render(); };
 // 모선명을 입력하면 그 모선이 실린 항로를 자동으로 켠다.
