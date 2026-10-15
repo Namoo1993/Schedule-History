@@ -491,7 +491,11 @@ function render(){
   $("#chips").querySelectorAll(".chip[data-i]").forEach(b=>{
     b.onclick = () => {
       const i = +b.dataset.i;
-      shown.has(i) ? shown.delete(i) : shown.add(i);
+      if(shown.has(i)){ shown.delete(i); render(); return; }
+      // 항로를 켜면 그 항로의 서비스와 모선을 전부 켠 상태로 시작한다.
+      shown.add(i);
+      const r = snap.routes[i];
+      if(r.ok) r.vessels.forEach(v => { shownS.add(svcOf(v)); hiddenV.delete(v.vessel); });
       render();
     };
   });
@@ -547,7 +551,8 @@ function syncServiceChips(all, services){
     return `<button class="schip" data-s="${esc(s)}" aria-pressed="${p}"
               title="${esc(s)} · ${cnt.get(s)}항차 (누르면 ${p?"끄기":"켜기"})">${esc(s)}<span class="n">${cnt.get(s)}</span></button>`;
   }).join("")
-  + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">선택 해제</button>`;
+  + `<button class="vchip act${on < services.length ? "" : " ghost"}" id="sAll">전체 보기</button>`
+  + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">전체 숨기기</button>`;
 
   box.querySelectorAll(".schip[data-s]").forEach(b => {
     b.onclick = () => {
@@ -556,8 +561,9 @@ function syncServiceChips(all, services){
       render();
     };
   });
-  // 지금 목록에 있는 서비스만 끈다. 꺼 둔 항로 쪽 선택까지 말없이 지우지 않는다.
-  const n = on ? $("#sNone") : null;
+  // 지금 목록에 있는 서비스만 건드린다. 꺼 둔 항로 쪽 선택까지 말없이 바꾸지 않는다.
+  const a = (on < services.length) ? $("#sAll") : null, n = on ? $("#sNone") : null;
+  if(a) a.onclick = () => { services.forEach(s => shownS.add(s)); render(); };
   if(n) n.onclick = () => { services.forEach(s => shownS.delete(s)); render(); };
 }
 
@@ -689,7 +695,7 @@ function drawCalendar(events, allHidden, noSvc){
                     ? `<div class="note"><b>이 스냅샷에는 ${dirn==="IM"?"수입":"수출"} 구간이 없습니다.</b>양방향 수집 이전에 받은 자료입니다. 다른 날짜를 선택해 보세요.</div>`
       : shown.size === 0
                     ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 그 구간의 서비스 목록이 나옵니다.</div>`
-      : noSvc       ? `<div class="note"><b>보고 싶은 서비스를 선택하세요.</b>위 <b>서비스</b> 줄에서 서비스명(예: ISS, NCK)을 누르면 그 서비스의 모선 스케줄이 달력에 표시됩니다.</div>`
+      : noSvc       ? `<div class="note"><b>서비스를 전부 숨겼습니다.</b>위 <b>서비스</b> 줄에서 보고 싶은 서비스를 누르거나 <b>전체 보기</b> 를 눌러 주세요.</div>`
                     : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로에 이 달의 스케줄이 없습니다.</div>`;
     return;
   }
