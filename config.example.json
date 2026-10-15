@@ -10,7 +10,7 @@
     { "pol": "CNNGB", "pod": "KRINC" },
     { "pol": "CNNGB", "pod": "KRPUS" }
   ],
-  "months_ahead": 3,
+  "months_ahead": 2,
   "headless": true,
   "viewer_port": 8777
 }

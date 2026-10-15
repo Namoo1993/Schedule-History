@@ -116,9 +116,15 @@ def route_pairs(routes, both=True):
     return out
 
 
-def months_from(today, count):
-    """조회할 YYYYMM 목록 (이번 달 포함)."""
+def months_from(today, count, prev_until_day=0):
+    """조회할 YYYYMM 목록 (이번 달 포함).
+
+    매월 prev_until_day 일까지는 전월도 앞에 붙인다.
+    """
     out, y, m = [], today.year, today.month
+    if today.day <= prev_until_day:
+        py, pm = (y - 1, 12) if m == 1 else (y, m - 1)
+        out.append("%d%02d" % (py, pm))
     for _ in range(max(1, count)):
         out.append("%d%02d" % (y, m))
         m += 1
@@ -385,7 +391,8 @@ def run(session=None, show=False):
         session = "AM" if now.hour < 12 else "PM"
     session = session.upper()
     kor = "오전" if session == "AM" else "오후"
-    month_list = months_from(now.date(), cfg.get("months_ahead", 3))
+    month_list = months_from(now.date(), cfg.get("months_ahead", 2),
+                             cfg.get("prev_month_until_day", 10))
     pairs = route_pairs(cfg["routes"], cfg.get("both_directions", True))
 
     log("=" * 60)

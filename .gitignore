@@ -6,3 +6,9 @@ __pycache__/
 *.pyc
 _site/
 *.png
+
+# ICON 실적 엑셀 - 운임·수익·화주명이 들어 있어 올리지 않음
+actuals/
+# 실적 합계·Off-hire 판정 - 공개 여부를 정할 때까지 올리지 않음
+data/actuals.json
+data/hire.json

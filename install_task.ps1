@@ -5,7 +5,7 @@
 #
 #   등록되는 작업 2개
 #     PCS_Schedule_AM : 매일 09:00  →  "YYYY.MM.DD 오전" 스냅샷
-#     PCS_Schedule_PM : 매일 18:00  →  "YYYY.MM.DD 오후" 스냅샷
+#     PCS_Schedule_PM : 매일 17:00  →  "YYYY.MM.DD 오후" 스냅샷
 #
 #   각 작업은 run_and_push.ps1 을 실행한다 (수집 → 성공 시 GitHub 푸시).
 #
@@ -99,7 +99,7 @@ function Register-PcsTask {
 
 Write-Host ""
 Register-PcsTask -Name "PCS_Schedule_AM" -Session "AM" -Time "09:00" -Desc "PCS LINE 스케줄 오전 수집"
-Register-PcsTask -Name "PCS_Schedule_PM" -Session "PM" -Time "18:00" -Desc "PCS LINE 스케줄 오후 수집"
+Register-PcsTask -Name "PCS_Schedule_PM" -Session "PM" -Time "17:00" -Desc "PCS LINE 스케줄 오후 수집"
 
 # --- 3. 확인 -------------------------------------------------------------
 Write-Host ""

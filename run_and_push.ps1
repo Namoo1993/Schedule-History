@@ -64,6 +64,24 @@ public static extern uint SetThreadExecutionState(uint esFlags);
     $held = $false
 }
 
+# --- 밀린 실행(따라잡기) 중복 방지 ------------------------------------------
+# 작업 스케줄러의 '예약 시간을 놓친 경우 가능한 빨리 실행' 때문에, 전날 17시를
+# 놓친 PM 작업이 아침에 PC 를 켜는 순간 돌고, 곧이어 09시 AM 작업이 또 돈다.
+# 다음 세션이 곧 돌 시간대라면 밀린 실행은 건너뛴다.
+$hour = (Get-Date).Hour
+if (($Session -eq "PM" -and $hour -lt 12) -or ($Session -eq "AM" -and $hour -ge 17)) {
+    W "$Session 밀린 실행 건너뜀 (곧 다음 세션이 실행됨)"
+    exit 0
+}
+
+# --- 동시 실행 방지 --------------------------------------------------------
+# AM/PM 은 서로 다른 작업이라 스케줄러의 '새 인스턴스 무시' 가 적용되지 않는다.
+$mutex = New-Object System.Threading.Mutex($false, "Global\PCS_Schedule_Scrape")
+if (-not $mutex.WaitOne(0)) {
+    W "$Session 건너뜀: 다른 수집 작업이 이미 실행 중"
+    exit 0
+}
+
 W "=========================================================="
 W "$Session 수집 작업 시작"
 if (-not $Python) { W "중단: 파이썬을 찾지 못했습니다."; exit 2 }
@@ -89,34 +107,43 @@ else        { W "경고: 사이트 확인 실패. 그래도 수집을 시도합�
 $code = $LASTEXITCODE
 W "scraper.py 종료코드: $code"
 
-if ($code -ne 0) {
-    W "수집 실패 - 커밋하지 않고 종료합니다. (logs 폴더 확인)"
-    exit $code
-}
-
 # --- GitHub 반영 --------------------------------------------------------
 # 이게 있어야 GitHub Pages 뷰어가 갱신된다. 예전에는 Actions 가 해주던 일.
-if (-not $Git) { W "경고: git 을 찾지 못해 푸시를 건너뜁니다."; exit 0 }
+function Push-Data([string]$What = "수집") {
+    if (-not $Git) { W "경고: git 을 찾지 못해 푸시를 건너뜁니다."; return }
 
-& $Git add data/ 2>&1 | ForEach-Object { W "  git: $_" }
-& $Git diff --staged --quiet
-if ($LASTEXITCODE -eq 0) {
-    W "데이터 변경 없음 - 푸시 생략"
-    exit 0
+    # 실적 합계(actuals.json)와 Off-hire 판정(hire.json)은 공개 여부를 정할 때까지 올리지 않는다.
+    & $Git add -- data/ ':!data/actuals.json' ':!data/hire.json' 2>&1 | ForEach-Object { W "  git: $_" }
+    & $Git diff --staged --quiet
+    if ($LASTEXITCODE -eq 0) { W "데이터 변경 없음 - 푸시 생략"; return }
+
+    $msg = "{0}: {1} {2}" -f $What, (Get-Date -Format "yyyy.MM.dd"), $Session
+    & $Git commit -m $msg 2>&1 | ForEach-Object { W "  git: $_" }
+
+    # 다른 데서 먼저 올라간 커밋이 있으면 rebase 로 붙인다 (충돌 시 푸시 포기)
+    & $Git pull --rebase --autostash 2>&1 | ForEach-Object { W "  git: $_" }
+    if ($LASTEXITCODE -ne 0) { W "경고: pull --rebase 실패. 다음 실행 때 다시 시도합니다."; return }
+
+    & $Git push 2>&1 | ForEach-Object { W "  git: $_" }
+    if ($LASTEXITCODE -eq 0) { W "푸시 완료 - 잠시 뒤 GitHub Pages 가 갱신됩니다." }
+    else { W "경고: 푸시 실패. 다음 실행 때 다시 시도합니다." }
 }
 
-$msg = "수집: {0} {1}" -f (Get-Date -Format "yyyy.MM.dd"), $Session
-& $Git commit -m $msg 2>&1 | ForEach-Object { W "  git: $_" }
+if ($code -ne 0) { W "수집 실패 - 커밋하지 않습니다. (logs 폴더 확인)" }
+else { Push-Data }
 
-# 다른 데서 먼저 올라간 커밋이 있으면 rebase 로 붙인다 (충돌 시 푸시 포기)
-& $Git pull --rebase --autostash 2>&1 | ForEach-Object { W "  git: $_" }
-if ($LASTEXITCODE -ne 0) {
-    W "경고: pull --rebase 실패. 다음 실행 때 다시 시도합니다."
-    exit 0
-}
+# --- ICON 실적 엑셀 -------------------------------------------------------
+# 스케줄 푸시가 늦어지지 않도록 푸시 뒤에 받는다. 스케줄 수집 성공 여부와 무관하게
+# 시도한다. 원본 엑셀(actuals/)은 영업 정보라 올리지 않고, 뷰어용 합계
+# (data/actuals.json)만 한 번 더 푸시한다.
+& $Python (Join-Path $here "icon_actuals.py") --session $Session 2>&1 | ForEach-Object { W "  $_" }
+$acode = $LASTEXITCODE
+W "icon_actuals.py 종료코드: $acode"
 
-& $Git push 2>&1 | ForEach-Object { W "  git: $_" }
-if ($LASTEXITCODE -eq 0) { W "푸시 완료 - 잠시 뒤 GitHub Pages 가 갱신됩니다." }
-else { W "경고: 푸시 실패. 다음 실행 때 다시 시도합니다." }
+# Off-hire / Guaranteed 판정. 새 항차와 출항일이 바뀐 항차만 6103 에 조회한다.
+& $Python (Join-Path $here "icon_hire.py") 2>&1 | ForEach-Object { W "  $_" }
+$hcode = $LASTEXITCODE
+W "icon_hire.py 종료코드: $hcode"
+# (실적·판정 파일은 지금 올리지 않으므로 여기서 따로 푸시하지 않는다)
 
-exit 0
+exit $code

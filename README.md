@@ -41,7 +41,7 @@ PCS LINE e-service(ebiz.pcsline.co.kr)의 **스케줄 > 구간별** 화면을 �
 기타 설정
 | 항목 | 설명 |
 |---|---|
-| `months_ahead` | 이번 달부터 몇 개월치를 조회할지 (기본 3) |
+| `months_ahead` | 이번 달부터 몇 개월치를 조회할지 (기본 2 = 이번 달·다음 달. 매월 10일까지는 전달도 조회) |
 | `headless` | `false` 로 두면 수집할 때 브라우저 창이 보입니다 |
 | `viewer_port` | 뷰어 주소의 포트 번호 (기본 8777) |
 
@@ -215,4 +215,15 @@ python scraper.py --session PM   # 오후 스냅샷으로 저장
 python scraper.py --show         # 브라우저 창 띄우고 수집
 python server.py                 # 뷰어 실행
 python server.py --port 9000     # 포트 바꿔서 실행
+python icon_actuals.py           # ICON 실적 엑셀만 따로 받기 (actuals/ 에 저장)
 ```
+
+## 8. ICON 실적 엑셀
+
+자동 작업(09:00·17:00)이 스케줄을 푸시한 뒤 `icon_actuals.py` 로 ICON 3562
+B/L Profitability Inquiry 를 조회해 엑셀을 `actuals/YYYY-MM-DD_AM.xlsx` 로 받습니다.
+
+- 기간: 전달 1일 ~ 이번 달 말일, POL `CN,VN,JP,TH,HK`, POD 비움
+- 계정: `config.json` 의 `icon_login`
+- 운임·수익·화주명이 들어 있어 원본 `actuals/` 는 GitHub 에 올리지 않고,
+  항차·POL·POD 별 TEU·금액 합계만 `data/actuals.json` 으로 올려 뷰어에서 보여줍니다.
