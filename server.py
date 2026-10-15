@@ -97,6 +97,20 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"error": "해당 날짜/시간대의 수집 데이터가 없습니다."}, 404)
             return self._json(data)
 
+        if u.path == "/api/hire":
+            # 항차별 Off-hire / Guaranteed 판정 (icon_hire.py 가 만든다)
+            f = DATA / "hire.json"
+            if not f.exists():
+                return self._json({})
+            return self._send(200, f.read_text(encoding="utf-8"), "application/json; charset=utf-8")
+
+        if u.path == "/api/actuals":
+            # 항차·POL·POD 별 실적 합계 (icon_actuals.py 가 만든다)
+            f = DATA / "actuals.json"
+            if not f.exists():
+                return self._json({"error": "실적 파일이 없습니다."}, 404)
+            return self._send(200, f.read_text(encoding="utf-8"), "application/json; charset=utf-8")
+
         return self._send(404, "not found", "text/plain; charset=utf-8")
 
 

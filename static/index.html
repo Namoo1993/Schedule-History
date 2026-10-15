@@ -175,20 +175,49 @@
     background:color-mix(in srgb, var(--r3) 15%, transparent); border:1px solid var(--r3); color:var(--ink);}
 
   dialog{
-    border:1px solid var(--line); border-radius:14px; padding:0; max-width:460px; width:calc(100% - 32px);
+    border:1px solid var(--line); border-radius:14px; padding:0; max-width:540px; width:calc(100% - 32px);
     background:var(--panel); color:var(--ink); box-shadow:var(--shadow);
   }
   dialog::backdrop{background:rgba(10,15,25,.45);}
   .dh{padding:15px 18px; border-bottom:1px solid var(--line); border-top:4px solid var(--c); border-radius:11px 11px 0 0;}
   .dh h3{margin:0; font-size:17px; letter-spacing:-.2px;}
-  .dh p{margin:4px 0 0; font-size:12.5px; color:var(--muted);}
+  .dh p{margin:6px 0 0; font-size:12.5px; color:var(--muted);}
+  .dh p:empty{display:none;}
+  /* Off-hire / Guaranteed 표시 (icon_hire.py 판정) */
+  .hire{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.2px;
+        padding:2px 10px; border-radius:999px;}
+  .hire.off{background:#fde4e7; color:#b4142e;}
+  .hire.ok{background:#dcf3e6; color:#0a6b3c;}
   .db{padding:6px 18px 16px;}
   .db dl{display:grid; grid-template-columns:86px 1fr; gap:9px 12px; margin:12px 0 0; font-size:13px;}
   .db dt{color:var(--muted); font-size:12px; padding-top:1px;}
   .db dd{margin:0; font-weight:600; font-variant-numeric:tabular-nums;}
-  .db footer{margin-top:18px; text-align:right;}
+  .db footer{margin-top:18px; display:flex; justify-content:flex-end; gap:8px;}
+
+  /* ---- 실적 ---- */
+  /* 나라·항구가 많은 항차는 표가 길어지므로 창 안에서 굴린다 */
+  .act{max-height:62vh; overflow-y:auto;}
+  .act table{width:100%; border-collapse:collapse; margin-top:12px; font-size:13px;
+             font-variant-numeric:tabular-nums;}
+  .act th{font-size:11.5px; font-weight:700; color:var(--muted); text-align:right;
+          padding:6px 8px; border-bottom:1px solid var(--line);}
+  .act th:first-child,.act th:nth-child(2){text-align:left;}
+  .act td{padding:7px 8px; border-bottom:1px solid var(--line); text-align:right; font-weight:600;}
+  .act td.pol,.act td.pod{text-align:left;}
+  .act td.pol{font-weight:800; vertical-align:top;}
+  .act tr.grp td{border-top:2px solid var(--line);}
+  .act .msg{margin:14px 0 2px; font-size:13px; color:var(--muted); text-align:center;}
+  /* POL 합계는 옅은 파랑, 전체 합계는 진한 남색으로 구분 */
+  .act tr.sub td{font-weight:800; background:var(--accent-soft); color:var(--accent);}
+  .act tr.tot td{border:0; font-weight:800; background:var(--ink); color:#fff;}
+
   .db footer button{font:inherit; font-size:13px; padding:7px 18px; border-radius:8px;
     border:1px solid var(--line); background:var(--accent); color:#fff; cursor:pointer; font-weight:600;}
+  /* 실적 창의 '스케줄 보기' 버튼은 왼쪽에 보조 버튼 모양으로 */
+  .db footer button.sec{margin-right:auto; background:var(--panel); color:var(--ink);}
+  .db footer button.sec:hover{border-color:var(--accent); color:var(--accent);}
+  /* dl 에 display:grid 가 걸려 있어 hidden 속성만으로는 안 숨겨진다 */
+  .db [hidden]{display:none !important;}
 
   /* ---- 좁은 화면용 목록 ---- */
   .list{background:var(--panel); border:1px solid var(--line); border-radius:12px;
@@ -286,8 +315,9 @@
 <dialog id="dlg">
   <div class="dh" id="dh"><h3 id="dTitle"></h3><p id="dSub"></p></div>
   <div class="db">
+    <div class="act" id="dAct" hidden></div>
     <dl id="dList"></dl>
-    <footer><button id="dClose">닫기</button></footer>
+    <footer><button id="dSched" class="sec" hidden>스케줄 보기</button><button id="dClose">닫기</button></footer>
   </div>
 </dialog>
 
@@ -325,6 +355,7 @@ const SEA_PORT = new Set(["CNSHK","CNXMN"]);
 const $ = s => document.querySelector(s);
 
 let snapshots = [];      // 저장된 스냅샷 목록
+let hire = {};           // 항차별 Off-hire / Guaranteed 판정 {VVD:{status,delay,port,...}}
 let snap = null;         // 현재 표시 중인 스냅샷
 let session = "AM";
 let basis = "etd";
@@ -362,14 +393,18 @@ async function getJSON(apiPath, staticPath){
     const r = await fetch(apiPath, {cache:"no-store"});
     if(r.ok) return await r.json();
   }catch(e){ /* 정적 호스팅 */ }
-  const r2 = await fetch(staticPath, {cache:"no-store"});
-  if(!r2.ok) return null;
-  try{ return await r2.json(); }catch(e){ return null; }
+  // 뷰어 서버가 꺼졌거나 파일을 직접 열었으면 여기서도 실패한다. 예외를 넘기면
+  // 부르는 쪽 화면이 '불러오는 중' 에서 멈추므로 null 로 돌려준다.
+  try{
+    const r2 = await fetch(staticPath, {cache:"no-store"});
+    return r2.ok ? await r2.json() : null;
+  }catch(e){ return null; }
 }
 
 // ---------- 초기 로드 ----------
 async function init(){
   snapshots = await getJSON("/api/snapshots", "./data/index.json") || [];
+  hire = await getJSON("/api/hire", "./data/hire.json") || {};
 
   if(!snapshots.length){
     $("#view").innerHTML = `<div class="note"><b>아직 수집된 데이터가 없습니다.</b>
@@ -389,6 +424,50 @@ async function init(){
 
 function availSessions(date){
   return new Set(snapshots.filter(s=>s.date===date).map(s=>s.session));
+}
+
+// ---------- 표시 기간 ----------
+// 달력은 스냅샷 날짜 기준 전달 ~ 다음달만 보여준다.
+const shiftYM = (ym, k) => {
+  const d = new Date(+ym.slice(0,4), +ym.slice(5,7) - 1 + k, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+};
+const inRange = (date, s) => {
+  const ym = date.slice(0,7), cur = s.date.slice(0,7);
+  return ym >= shiftYM(cur, -1) && ym <= shiftYM(cur, 1);
+};
+
+// 수집기는 매월 10일까지만 전달을 조회한다. 그 뒤 스냅샷에는 전달 모선이 없으므로,
+// 전달이 들어 있던 마지막 스냅샷(보통 그달 10일 이전 마지막 수집분)에서 가져와 합친다.
+const snapCache = new Map();
+async function fetchSnap(date, session){
+  const k = `${date}_${session}`;
+  if(!snapCache.has(k))
+    snapCache.set(k, await getJSON(`/api/snapshot?date=${date}&session=${session}`, `./data/${k}.json`));
+  return snapCache.get(k);
+}
+async function fillPrevMonth(s){
+  const pm = shiftYM(s.date.slice(0,7), -1);
+  const has = x => x.routes.some(r => (r.vessels||[]).some(v => (v.etd_date||"").startsWith(pm)));
+  s.prevFrom = null;
+  if(has(s)) return;
+  const me = `${s.date}_${s.session}`;
+  for(const c of snapshots){            // 최신순
+    if(`${c.date}_${c.session}` >= me || c.date < `${pm}-01`) continue;
+    const o = await fetchSnap(c.date, c.session);
+    if(!o || o.error || !has(o)) continue;
+    const byKey = new Map(o.routes.filter(r => r.ok).map(r => [routeKey(r), r]));
+    s.routes.forEach(r => {
+      const old = byKey.get(routeKey(r));
+      if(!old) return;
+      const seen = new Set(r.vessels.map(v => `${v.vslvoy}|${v.etd}`));
+      old.vessels.forEach(v => {
+        if((v.etd_date||"").startsWith(pm) && !seen.has(`${v.vslvoy}|${v.etd}`)) r.vessels.push(v);
+      });
+    });
+    s.prevFrom = o.snapshot;
+    return;
+  }
 }
 
 // ---------- 스냅샷 불러오기 ----------
@@ -420,6 +499,7 @@ async function load(){
   const keep = snap ? new Set([...shown].map(i => routeKey(snap.routes[i]))) : null;
 
   snap = got;
+  await fillPrevMonth(snap);
   shown.clear();
   if(keep) snap.routes.forEach((r,i) => { if(keep.has(routeKey(r))) shown.add(i); });
   $("#q").value = "";
@@ -463,7 +543,8 @@ function syncCountrySelect(){
 // ---------- 화면 그리기 ----------
 function render(){
   if(!snap) return;
-  $("#meta").textContent = `· ${snap.snapshot} 기준 (수집 ${snap.collected_at})`;
+  $("#meta").textContent = `· ${snap.snapshot} 기준 (수집 ${snap.collected_at})` +
+    (snap.prevFrom ? ` · 전달은 ${snap.prevFrom} 수집분` : "");
   syncDirTabs();
   syncCountrySelect();
 
@@ -617,7 +698,7 @@ function collect(){
     if(!shown.has(i) || !r.ok || !inDir(r)) return;
     r.vessels.forEach(v=>{
       const date = basis==="etd" ? v.etd_date : v.eta_date;
-      if(!date) return;
+      if(!date || !inRange(date, snap)) return;
       if(q && !v.label.toUpperCase().includes(q)) return;
       out.push({...v, date, ri:i, routeLabel:routeKey(r)});
     });
@@ -749,7 +830,7 @@ function bindEvents(events, byDate){
     b.onclick = () => {
       const [vslvoy, etd, ri] = b.dataset.k.split("|");
       const e = events.find(x=>x.vslvoy===vslvoy && x.etd===etd && String(x.ri)===ri);
-      if(e) openDetail(e);
+      if(e) openVessel(e);
     };
   });
   $("#view").querySelectorAll(".more").forEach(b=>{
@@ -762,7 +843,7 @@ function bindEvents(events, byDate){
         el.style.setProperty("--c", e.color); el.style.setProperty("--tx", e.textColor);
         el.innerHTML=`${e.label} <span class="t">${t.slice(11)}</span>`;
         el.title=`${e.label} / ${e.route}\n${e.pol_name} → ${e.pod_name}`;
-        el.onclick=()=>openDetail(e);
+        el.onclick=()=>openVessel(e);
         td.insertBefore(el, b);
       });
       b.remove();
@@ -770,10 +851,17 @@ function bindEvents(events, byDate){
   });
 }
 
-function openDetail(e){
-  $("#dh").style.setProperty("--c", e.color);
-  $("#dTitle").textContent = e.label;
-  $("#dSub").textContent = `${e.pol_name} → ${e.pod_name}`;
+// 모선명 아래 줄: 판정이 있으면 Off-hire / Guaranteed, 없으면 비워 둔다.
+function setHire(e){
+  const h = hire[e.vslvoy];
+  const st = h && h.status;
+  $("#dSub").innerHTML = st
+    ? `<span class="hire ${st === "Off-hire" ? "off" : "ok"}" title="${esc(h.port)} Delay ETD ${h.delay}시간">${st}</span>`
+    : "";
+}
+
+// 스케줄 상세 내용. 실적 창에서는 '스케줄 보기' 를 눌러야 펼쳐진다.
+function fillDetail(e){
   $("#dList").innerHTML = `
     <dt>선명</dt><dd>${e.vessel}</dd>
     <dt>항차</dt><dd>${e.voyage} <span style="color:var(--muted);font-weight:400">(${e.vslvoy})</span></dd>
@@ -783,7 +871,125 @@ function openDetail(e){
     <dt>구간</dt><dd>${e.routeLabel}</dd>
     <dt>운송형태</dt><dd>${e.direct ? "직항 (D)" : "환적 (T)"}</dd>
     <dt>운항상태</dt><dd>${e.upcoming===false ? "출항 완료" : "출항 예정"}</dd>`;
-  $("#dlg").showModal();
+}
+
+function openDetail(e){
+  fillDetail(e);
+  $("#dList").hidden = false; $("#dAct").hidden = true; $("#dSched").hidden = true;
+  $("#dh").style.setProperty("--c", e.color);
+  $("#dTitle").textContent = e.label;
+  setHire(e);
+  if(!$("#dlg").open) $("#dlg").showModal();   // 실적 창에서 넘어올 때는 이미 열려 있다
+}
+
+// ---------- 실적 ----------
+// 수입 구간 모선은 실적을, 수출 구간은 예전처럼 스케줄 상세를 보여준다.
+// (실적은 POL 이 CN·VN·JP·TH·HK 인 B/L 만 받으므로 수출 항차에는 없다)
+const openVessel = e => dirOf(snap.routes[e.ri]) === "IM" ? openActuals(e) : openDetail(e);
+
+// data/actuals.json 은 icon_actuals.py 가 만든 항차별 합계다.
+let actuals = null;      // {updated, period, vvd:{VVD:[{pol,pod,pods,teu,amt,bl}]}}
+
+const fmtTEU = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
+const fmtRPT = (amt, teu) => teu ? (amt/teu).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) : "-";
+
+// 이 POL 들은 한국 POD 도 항구별로 나누지 않고 'KR' 한 줄로 합친다.
+// (어느 항로에서 눌렀든 표의 POL 기준으로 적용)
+const KR_GROUP_POL = new Set(["CNSHA","CNNGB","VNHPH","CNSHK","CNXMN","THLCH","THBKK","HKHKG","CNDLC","CNYNT"]);
+
+function groupKR(lines){
+  const out = [], kr = new Map();
+  lines.forEach(l => {
+    if(!(KR_GROUP_POL.has(l.pol) && l.pod.startsWith("KR"))) return out.push(l);
+    const g = kr.get(l.pol);
+    if(g){ g.teu += l.teu; g.amt += l.amt; g.bl += l.bl; return; }
+    const n = {...l, pod:"KR", teu:l.teu, amt:l.amt};
+    kr.set(l.pol, n); out.push(n);   // 한국 줄은 원래 POL 묶음 맨 앞이라 자리도 그대로다
+  });
+  return out;
+}
+
+// 항차가 각 POL 을 떠나는 시각. 스케줄(전달 합친 것 포함)에서 찾고,
+// 스케줄에 없는 POL 은 실적의 가장 이른 On Board Date(시각 없음)로 대신한다.
+function polOrder(vslvoy, lines){
+  const etd = new Map();
+  snap.routes.forEach(r => (r.vessels||[]).forEach(v => {
+    if(v.vslvoy !== vslvoy || !v.etd) return;
+    if(!etd.has(r.pol) || v.etd < etd.get(r.pol)) etd.set(r.pol, v.etd);
+  }));
+  const key = new Map();
+  lines.forEach(l => key.set(l.pol, etd.get(l.pol) || (l.obd ? l.obd + " 99:99" : "9999")));
+  return key;
+}
+
+function actualsTable(lines, vslvoy){
+  lines = groupKR(lines);
+  // TEU 는 줄들의 합, RPT 는 금액 합계 / TEU 합계 (줄별 RPT 의 평균이 아님)
+  const sum = ls => {
+    const teu = ls.reduce((a, l) => a + l.teu, 0), amt = ls.reduce((a, l) => a + l.amt, 0);
+    return `<td>${fmtTEU(Math.round(teu*100)/100)}</td><td>${fmtRPT(amt, teu)}</td>`;
+  };
+  // 같은 POL 끼리 묶어 첫 줄에만 POL 을 적고, 묶음 끝(POL 칸 바로 아래)에 POL 합계 줄을 붙인다
+  const byPol = new Map();
+  lines.forEach(l => (byPol.get(l.pol) || byPol.set(l.pol, []).get(l.pol)).push(l));
+  let html = `<table><thead><tr><th>POL</th><th>POD</th><th>TEU</th><th>RPT</th></tr></thead><tbody>`;
+  // 먼저 출항하는 POL 이 위로
+  const order = polOrder(vslvoy, lines);
+  [...byPol].sort((a, b) => order.get(a[0]).localeCompare(order.get(b[0])) || a[0].localeCompare(b[0]))
+            .forEach(([pol, ls]) => {
+    ls.forEach((l, k) => {
+      // 한국은 항구별(KRPUS), 그 밖은 나라별(RU, JP ...) 한 줄
+      const pod = esc(l.pod);
+      html += `<tr class="${k===0?"grp":""}">`
+            + (k===0 ? `<td class="pol" rowspan="${ls.length}">${esc(pol)}</td>` : "")
+            + `<td class="pod">${pod}</td><td>${fmtTEU(l.teu)}</td><td>${fmtRPT(l.amt, l.teu)}</td></tr>`;
+    });
+    // 줄이 하나뿐이면 합계가 그 줄과 똑같으므로 생략한다
+    if(ls.length > 1) html += `<tr class="sub"><td class="pol" colspan="2">${esc(pol)} Total</td>${sum(ls)}</tr>`;
+  });
+  if(lines.length > 1) html += `<tr class="tot"><td class="pol" colspan="2">Total</td>${sum(lines)}</tr>`;
+  return html + `</tbody></table>`;
+}
+
+function showActuals(e){
+  const box = $("#dAct");
+  const lines = actuals.vvd[e.vslvoy];
+  // 오늘 이후 출항하는 모선은 아직 실적이 없으므로 예전처럼 스케줄 상세를 보여준다.
+  // (오늘 출항분도 선적 기록이 잡히기 전이면 여기로 온다)
+  const today = (() => { const t = new Date(); return ymd(t.getFullYear(), t.getMonth()+1, t.getDate()); })();
+  if(!(lines && lines.length) && (e.etd_date || "") >= today) return openDetail(e);
+  box.innerHTML = lines && lines.length
+    ? actualsTable(lines, e.vslvoy)
+    : `<div class="msg">이 항차(${esc(e.vslvoy)})의 실적이 없습니다.<br>ICON 3562 조회 결과에 이 항차의 B/L 이 없습니다.</div>`;
+}
+
+async function openActuals(e){
+  $("#dh").style.setProperty("--c", e.color);
+  $("#dTitle").textContent = e.label;
+  setHire(e);
+  fillDetail(e);
+  $("#dList").hidden = true;
+  const sb = $("#dSched");
+  sb.hidden = false; sb.textContent = "스케줄 보기";
+  // 실적과 스케줄을 번갈아 보여준다 (둘을 같이 띄우지 않는다)
+  sb.onclick = () => {
+    const show = $("#dList").hidden;
+    $("#dList").hidden = !show;
+    box.hidden = show;
+    sb.textContent = show ? "스케줄 닫기" : "스케줄 보기";
+  };
+  const box = $("#dAct");
+  box.hidden = false;
+  if(!$("#dlg").open) $("#dlg").showModal();
+
+  if(actuals) return showActuals(e);
+  box.innerHTML = `<div class="msg">실적을 불러오는 중…</div>`;
+  const got = await getJSON("/api/actuals", "./data/actuals.json");
+  // 실적 파일은 아직 웹(GitHub)에 올리지 않으므로 웹에서는 여기로 온다.
+  // 그럴 때는 예전처럼 스케줄 상세를 보여준다.
+  if(!got || got.error || !got.vvd) return openDetail(e);
+  actuals = got;
+  showActuals(e);
 }
 
 // ---------- 이벤트 ----------
