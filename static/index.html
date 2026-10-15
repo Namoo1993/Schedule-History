@@ -44,15 +44,17 @@
 
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
   .seg button{
-    font:inherit; font-size:13px; padding:6px 14px; border:0; cursor:pointer;
+    font:inherit; font-size:13px; font-weight:700; padding:6px 14px; border:0; cursor:pointer;
     background:var(--panel); color:var(--muted); min-height:32px;
   }
   .seg button+button{border-left:1px solid var(--line);}
-  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff; font-weight:700;}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff;}
   .seg.dir button{padding:6px 18px; font-size:13.5px;}
   .seg.dir button[aria-pressed="true"]{background:var(--ink);}
 
-  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);}
+  .chips{display:flex; flex-wrap:wrap; align-content:flex-start; gap:8px; margin-top:12px;
+        padding-top:12px; border-top:1px solid var(--line); min-height:43px;
+        scrollbar-gutter:stable;}
   .chip{
     display:inline-flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
     border:1px solid var(--line); background:var(--panel); color:var(--ink);
@@ -65,16 +67,21 @@
   .chip.err{border-style:dashed;}
   .chip.clr{color:var(--muted); font-weight:500;}
   .chip.clr:hover{border-color:var(--sun); color:var(--sun);}
+  /* 조건부 버튼은 지우지 않고 투명하게만 만든다. 안 그러면 줄이 다시 접히면서
+     아래 달력이 통째로 위아래로 흔들린다. */
+  .ghost{visibility:hidden !important; pointer-events:none !important;}
 
   /* ---- 모선 고르기 ---- */
   .vbar{display:flex; align-items:flex-start; gap:10px; margin-top:10px; padding-top:10px;
         border-top:1px dashed var(--line);}
   .vbar[hidden]{display:none;}
-  .vbar .lbl{flex:0 0 auto; padding-top:5px; font-size:12px; font-weight:700; color:var(--muted);
+  .vbar .lbl{flex:0 0 78px; padding-top:5px; font-size:12px; font-weight:700; color:var(--muted);
              white-space:nowrap;}
   .vbar .lbl b{color:var(--ink); font-variant-numeric:tabular-nums;}
   /* 항로를 여러 개 켜면 모선이 수십 개가 되므로 높이를 막고 안에서 굴린다 */
-  .vchips{flex:1 1 auto; display:flex; flex-wrap:wrap; gap:6px; max-height:120px; overflow:auto;}
+  .vchips{flex:1 1 auto; display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px;
+          height:120px; overflow-y:auto; scrollbar-gutter:stable;}
+  .vchips .none{font-size:12px; color:var(--muted); padding-top:5px;}
   .vchip{
     display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
     border:1px solid var(--line); background:var(--panel); color:var(--ink);
@@ -91,6 +98,18 @@
   .vchip[aria-pressed="false"] i{opacity:.22;}
   .vchip.act{padding:3px 11px; color:var(--muted); font-weight:500; text-decoration:none;}
   .vchip.act:hover{color:var(--accent);}
+
+  /* ---- 서비스 고르기 ---- 고른 항로에 들어 있는 서비스는 많아야 열몇 개라 높이를 낮게 둔다 */
+  .vchips.svcs{height:auto; min-height:28px; max-height:76px;}
+  .schip{
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+    border:1px solid var(--line); background:var(--panel); color:var(--muted);
+    border-radius:999px; padding:3px 12px; font-size:12.5px; font-weight:700; letter-spacing:.4px;
+    font-family:inherit;
+  }
+  .schip .n{font-weight:600; font-size:11.5px; opacity:.75; font-variant-numeric:tabular-nums; letter-spacing:0;}
+  .schip:hover{border-color:var(--accent); color:var(--ink);}
+  .schip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent); color:#fff;}
 
   /* ---- 달력 ---- */
   .calbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 10px;}
@@ -194,7 +213,7 @@
     .calbar{flex-wrap:wrap}
     .vbar{flex-wrap:wrap; gap:6px}
     .vbar .lbl{flex:1 1 100%; padding-top:0}
-    .vchips{max-height:156px}
+    .vchips{height:156px}
     .row{gap:10px 12px}
     label.f{flex:1 1 auto}
     select,input[type=search]{flex:1 1 auto; min-width:0}
@@ -240,6 +259,10 @@
     </label>
   </div>
   <div class="chips" id="chips"></div>
+  <div class="vbar" id="sbar" hidden>
+    <span class="lbl">서비스 <b id="sCount"></b></span>
+    <div class="vchips svcs" id="schips"></div>
+  </div>
   <div class="vbar" id="vbar" hidden>
     <span class="lbl">모선 <b id="vCount"></b></span>
     <div class="vchips" id="vchips"></div>
@@ -307,6 +330,7 @@ let basis = "etd";
 let shown = new Set();   // 달력에 표시할 항로 index (비어 있으면 아무것도 표시 안 함)
 let cursor = null;       // 보고 있는 달 {y, m}
 let country = null;      // 칩 목록에 보여줄 상대 국가 (null 이면 첫 국가로 정한다)
+let shownS = new Set();  // 켜 둔 서비스(노선코드). 비어 있으면 달력에 아무것도 안 나온다.
 let hiddenV = new Set(); // 달력에서 숨겨 둔 모선명. 비어 있으면 전부 보인다.
 let dirn = "IM";         // 보고 있는 방향. IM=수입(해외->한국), EX=수출(한국->해외)
 
@@ -327,6 +351,8 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 const pad = n => String(n).padStart(2,"0");
 const ymd = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
 const routeKey = r => `${r.pol}→${r.pod}`;
+// 서비스명 = 모선 일정의 노선코드(ISS, NCK ...). 비어 있는 일정은 한데 모아 둔다.
+const svcOf = v => v.route || "기타";
 
 // 로컬 뷰어(server.py)면 /api/* 를 쓰고, GitHub Pages 처럼 서버가 없으면
 // 같은 폴더의 data/*.json 을 직접 읽는다.
@@ -383,6 +409,8 @@ async function load(){
     snap = null;
     $("#view").innerHTML = `<div class="note"><b>해당 시간대 데이터가 없습니다.</b>${date} ${session==="AM"?"오전":"오후"} 수집 기록이 없습니다.</div>`;
     $("#calbar").hidden = true; $("#chips").innerHTML=""; $("#warn").innerHTML="";
+    $("#sbar").hidden = true;   // 달력 자체가 없는 상태라 필터 줄도 함께 접는다
+    $("#vbar").hidden = true;
     return;
   }
   // 오전/오후나 날짜를 바꿔도 골라 둔 항로는 그대로 유지한다.
@@ -450,10 +478,10 @@ function render(){
     const st = r.ok ? "" : `<span class="n">조회실패</span>`;
     return `<button class="chip${r.ok?"":" err"}" data-i="${i}" aria-pressed="${on}">
       ${routeKey(r)}${st}</button>`;
-  }).join("") + (vis.some(i => shown.has(i))
-                   ? `<button class="chip clr" id="clrSel">선택 해제</button>` : "");
+  }).join("")
+  + `<button class="chip clr${vis.some(i => shown.has(i)) ? "" : " ghost"}" id="clrSel">선택 해제</button>`;
 
-  const clr = $("#clrSel");
+  const clr = vis.some(i => shown.has(i)) ? $("#clrSel") : null;
   // 다른 방향 탭의 선택까지 말없이 지우면 탭을 옮겼을 때 당황스럽다.
   if(clr) clr.onclick = () => {
     snap.routes.forEach((r,i)=>{ if(inDir(r)) shown.delete(i); });
@@ -475,12 +503,16 @@ function render(){
   if(snap.logged_in === false) w += `<div class="warn">이 데이터는 <b>비로그인 상태</b>로 수집되었습니다${snap.login_error ? ` — ${snap.login_error}` : ""}.</div>`;
   $("#warn").innerHTML = w;
 
-  // 항로에서 뽑은 전체 일정(all)로 모선 목록을 만들고, 숨긴 모선만 덜어낸 것(events)을
-  // 달력에 그린다. 색은 all 기준으로 배정돼 있으므로 모선을 껐다 켜도 색이 흔들리지 않는다.
+  // 항로에서 뽑은 전체 일정(all) → 켜 둔 서비스의 일정(inSvc) → 숨긴 모선을 덜어낸 것(events)
+  // 순서로 좁혀서 달력에 그린다. 색은 all 기준으로 배정돼 있으므로 서비스나 모선을
+  // 껐다 켜도 같은 모선의 색이 흔들리지 않는다.
   const all = collect();
-  const vessels = [...new Set(all.map(e => e.vessel))].sort();
-  syncVesselChips(all, vessels);
-  const events = all.filter(e => !hiddenV.has(e.vessel));
+  const services = [...new Set(all.map(svcOf))].sort();
+  syncServiceChips(all, services);
+  const inSvc = all.filter(e => shownS.has(svcOf(e)));
+  const vessels = [...new Set(inSvc.map(e => e.vessel))].sort();
+  syncVesselChips(inSvc, vessels, services.length > 0);
+  const events = inSvc.filter(e => !hiddenV.has(e.vessel));
 
   if(cursor === null){
     // 오늘이 포함된 달, 없으면 데이터가 있는 첫 달
@@ -490,15 +522,57 @@ function render(){
     const pick = months.includes(tk) ? tk : (months[0] || tk);
     cursor = {y:+pick.slice(0,4), m:+pick.slice(5,7)};
   }
-  drawCalendar(events, all.length > 0 && events.length === 0);
+  drawCalendar(events, inSvc.length > 0 && events.length === 0,
+               all.length > 0 && inSvc.length === 0);
 }
 
-// 달력에 떠 있는 모선을 그대로 칩으로 만든다. 누르면 그 모선만 달력에서 빠진다.
-// 기본값은 '전부 보임' 이라 항로를 새로 켜서 모선이 늘어도 저절로 같이 보인다.
-function syncVesselChips(all, vessels){
+// 고른 항로에 들어 있는 서비스(노선코드)를 칩으로 만든다. 여러 개를 함께 켤 수 있고,
+// 켠 서비스의 모선만 아래 모선 줄과 달력에 나온다.
+function syncServiceChips(all, services){
+  const bar = $("#sbar"), box = $("#schips");
+  bar.hidden = false;   // 모선 줄과 마찬가지로 자리를 지켜 달력이 흔들리지 않게 한다
+  if(!services.length){
+    $("#sCount").textContent = "0";
+    box.innerHTML = `<span class="none">항로를 선택하면 서비스가 여기에 표시됩니다.</span>`;
+    return;
+  }
+
+  const cnt = new Map();
+  all.forEach(e => cnt.set(svcOf(e), (cnt.get(svcOf(e))||0)+1));
+  const on = services.filter(s => shownS.has(s)).length;
+  $("#sCount").textContent = on ? `${on}/${services.length}` : services.length;
+
+  box.innerHTML = services.map(s => {
+    const p = shownS.has(s);
+    return `<button class="schip" data-s="${esc(s)}" aria-pressed="${p}"
+              title="${esc(s)} · ${cnt.get(s)}항차 (누르면 ${p?"끄기":"켜기"})">${esc(s)}<span class="n">${cnt.get(s)}</span></button>`;
+  }).join("")
+  + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">선택 해제</button>`;
+
+  box.querySelectorAll(".schip[data-s]").forEach(b => {
+    b.onclick = () => {
+      const s = b.dataset.s;
+      shownS.has(s) ? shownS.delete(s) : shownS.add(s);
+      render();
+    };
+  });
+  // 지금 목록에 있는 서비스만 끈다. 꺼 둔 항로 쪽 선택까지 말없이 지우지 않는다.
+  const n = on ? $("#sNone") : null;
+  if(n) n.onclick = () => { services.forEach(s => shownS.delete(s)); render(); };
+}
+
+// 켜 둔 서비스의 모선을 칩으로 만든다. 누르면 그 모선만 달력에서 빠진다.
+// 기본값은 '전부 보임' 이라 서비스를 새로 켜서 모선이 늘어도 저절로 같이 보인다.
+function syncVesselChips(all, vessels, hasSvc){
   const bar = $("#vbar"), box = $("#vchips");
-  if(!vessels.length){ bar.hidden = true; box.innerHTML = ""; return; }
+  // 예전에는 모선이 없으면 이 줄을 통째로 감췄는데, 그때마다 아래 달력이 위로
+  // 솟았다가 내려왔다. 이제는 항상 자리를 지키고 안내 문구만 바꾼다.
   bar.hidden = false;
+  if(!vessels.length){
+    $("#vCount").textContent = "0";
+    box.innerHTML = `<span class="none">${hasSvc ? "서비스를 선택하면" : "항로와 서비스를 선택하면"} 모선이 여기에 표시됩니다.</span>`;
+    return;
+  }
 
   const cnt = new Map(), col = new Map();
   all.forEach(e => { cnt.set(e.vessel, (cnt.get(e.vessel)||0)+1); col.set(e.vessel, e.color); });
@@ -511,8 +585,8 @@ function syncVesselChips(all, vessels){
               title="${esc(v)} · ${cnt.get(v)}항차 (누르면 ${on?"숨김":"표시"})">
               <i style="--c:${col.get(v)}"></i>${esc(v)}<span class="n">${cnt.get(v)}</span></button>`;
   }).join("")
-  + (off ? `<button class="vchip act" id="vAll">전체 보기</button>` : "")
-  + (off < vessels.length ? `<button class="vchip act" id="vNone">전체 숨기기</button>` : "");
+  + `<button class="vchip act${off ? "" : " ghost"}" id="vAll">전체 보기</button>`
+  + `<button class="vchip act${off < vessels.length ? "" : " ghost"}" id="vNone">전체 숨기기</button>`;
 
   box.querySelectorAll(".vchip[data-v]").forEach(b => {
     b.onclick = () => {
@@ -523,7 +597,7 @@ function syncVesselChips(all, vessels){
   });
   // '전체' 버튼은 지금 목록에 있는 모선만 건드린다. 다른 항로에서 꺼 둔 모선까지
   // 말없이 되살리면 항로를 다시 켰을 때 당황스럽다.
-  const a = $("#vAll"), n = $("#vNone");
+  const a = off ? $("#vAll") : null, n = (off < vessels.length) ? $("#vNone") : null;
   if(a) a.onclick = () => { vessels.forEach(v => hiddenV.delete(v)); render(); };
   if(n) n.onclick = () => { vessels.forEach(v => hiddenV.add(v)); render(); };
 }
@@ -578,7 +652,7 @@ function drawList(events, byDate, todayKey){
   }).join("") + `</div>`;
 }
 
-function drawCalendar(events, allHidden){
+function drawCalendar(events, allHidden, noSvc){
   $("#calbar").hidden = false;
   const {y,m} = cursor;
   $("#monthTitle").textContent = `${y}년 ${m}월`;
@@ -614,7 +688,8 @@ function drawCalendar(events, allHidden){
       : !snap.routes.some(inDir)
                     ? `<div class="note"><b>이 스냅샷에는 ${dirn==="IM"?"수입":"수출"} 구간이 없습니다.</b>양방향 수집 이전에 받은 자료입니다. 다른 날짜를 선택해 보세요.</div>`
       : shown.size === 0
-                    ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 해당 구간의 스케줄이 달력에 표시됩니다.</div>`
+                    ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 그 구간의 서비스 목록이 나옵니다.</div>`
+      : noSvc       ? `<div class="note"><b>보고 싶은 서비스를 선택하세요.</b>위 <b>서비스</b> 줄에서 서비스명(예: ISS, NCK)을 누르면 그 서비스의 모선 스케줄이 달력에 표시됩니다.</div>`
                     : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로에 이 달의 스케줄이 없습니다.</div>`;
     return;
   }
@@ -713,14 +788,17 @@ $("#btnIM").onclick = () => { dirn = "IM"; country = null; hiddenV.clear(); $("#
 $("#btnEX").onclick = () => { dirn = "EX"; country = null; hiddenV.clear(); $("#q").value = ""; render(); };
 $("#selCountry").onchange = e => { country = e.target.value; render(); };
 $("#selBasis").onchange = e => { basis = e.target.value; render(); };
-// 모선명을 입력하면 그 모선이 실린 항로를 자동으로 켠다.
-// 같은 모선이 여러 구간에 걸쳐 있으면 그 구간을 전부 켜서 나란히 보여준다.
+// 모선명을 입력하면 그 모선이 실린 항로와 서비스를 자동으로 켠다.
+// 같은 모선이 여러 구간·서비스에 걸쳐 있으면 전부 켜서 나란히 보여준다.
 $("#q").oninput = () => {
   const q = $("#q").value.trim().toUpperCase();
   if(q && snap){
-    shown.clear();
+    shown.clear(); shownS.clear();
     snap.routes.forEach((r,i)=>{
-      if(r.ok && inDir(r) && r.vessels.some(v => v.label.toUpperCase().includes(q))) shown.add(i);
+      if(!r.ok || !inDir(r)) return;
+      const hit = r.vessels.filter(v => v.label.toUpperCase().includes(q));
+      if(hit.length) shown.add(i);
+      hit.forEach(v => shownS.add(svcOf(v)));
     });
   }
   render();
