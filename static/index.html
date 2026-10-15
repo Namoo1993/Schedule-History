@@ -78,9 +78,10 @@
   .vbar .lbl{flex:0 0 78px; padding-top:5px; font-size:12px; font-weight:700; color:var(--muted);
              white-space:nowrap;}
   .vbar .lbl b{color:var(--ink); font-variant-numeric:tabular-nums;}
-  /* 항로를 여러 개 켜면 모선이 수십 개가 되므로 높이를 막고 안에서 굴린다 */
+  /* 칩이 있는 줄 수만큼만 높이를 차지한다. 항로를 여러 개 켜서 모선이 수십 개가
+     되면 다섯 줄쯤에서 높이를 막고 안에서 굴린다 */
   .vchips{flex:1 1 auto; display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px;
-          height:120px; overflow-y:auto; scrollbar-gutter:stable;}
+          min-height:28px; max-height:148px; overflow-y:auto; scrollbar-gutter:stable;}
   .vchips .none{font-size:12px; color:var(--muted); padding-top:5px;}
   .vchip{
     display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
@@ -100,7 +101,7 @@
   .vchip.act:hover{color:var(--accent);}
 
   /* ---- 서비스 고르기 ---- 고른 항로에 들어 있는 서비스는 많아야 열몇 개라 높이를 낮게 둔다 */
-  .vchips.svcs{height:auto; min-height:28px; max-height:76px;}
+  .vchips.svcs{max-height:76px;}
   .schip{
     display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
     border:1px solid var(--line); background:var(--panel); color:var(--muted);
@@ -213,7 +214,7 @@
     .calbar{flex-wrap:wrap}
     .vbar{flex-wrap:wrap; gap:6px}
     .vbar .lbl{flex:1 1 100%; padding-top:0}
-    .vchips{height:156px}
+    .vchips{max-height:180px}
     .row{gap:10px 12px}
     label.f{flex:1 1 auto}
     select,input[type=search]{flex:1 1 auto; min-width:0}
