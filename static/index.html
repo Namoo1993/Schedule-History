@@ -160,6 +160,7 @@
   .ev .t{display:block; font-weight:600; font-size:10.5px; color:var(--tx,#fff); opacity:.82; font-variant-numeric:tabular-nums;}
   /* 출항 완료 항차도 예정 항차와 똑같은 색으로 보여준다 (상태는 상세창에서 확인) */
   .ev.done{opacity:1;}
+  .ev .t b{font-weight:800;}
   .more{font-size:11px; color:var(--muted); padding:1px 5px; cursor:pointer; background:0; border:0; font-family:inherit;}
 
   /* ---- 상태/모달 ---- */
@@ -831,7 +832,7 @@ function drawList(events, byDate, todayKey){
         const t = (basis==="etd"? e.etd : e.eta) || "";
         return `<button class="ev${e.upcoming===false?" done":""}" style="--c:${e.color};--tx:${e.textColor}"
                   data-k="${e.vslvoy}|${e.etd}|${e.ri}">${e.label}
-                  <span class="t">${t.slice(11)} · ${e.routeLabel}</span></button>`;
+                  <span class="t">${t.slice(11)} · ${e.routeLabel}${hireTag(e)}</span></button>`;
       }).join("")}</div></div>`;
   }).join("") + `</div>`;
 }
@@ -908,7 +909,7 @@ function drawCalendar(events, allHidden, noSvc){
         const t = (basis==="etd"? e.etd : e.eta) || "";
         html += `<button class="ev${e.upcoming===false?" done":""}" style="--c:${e.color};--tx:${e.textColor}" data-k="${e.vslvoy}|${e.etd}|${e.ri}"
                    title="${e.label} / ${e.route}\n${e.pol_name} → ${e.pod_name}">
-                   ${e.label} <span class="t">${t.slice(11)}</span></button>`;
+                   ${e.label} <span class="t">${t.slice(11)}${hireTag(e)}</span></button>`;
       });
       if(list.length>4) html += `<button class="more" data-d="${key}">+${list.length-4}건 더보기</button>`;
       html += "</td>";
@@ -937,7 +938,7 @@ function bindEvents(events, byDate){
         const el=document.createElement("button");
         el.className="ev"+(e.upcoming===false?" done":"");
         el.style.setProperty("--c", e.color); el.style.setProperty("--tx", e.textColor);
-        el.innerHTML=`${e.label} <span class="t">${t.slice(11)}</span>`;
+        el.innerHTML=`${e.label} <span class="t">${t.slice(11)}${hireTag(e)}</span>`;
         el.title=`${e.label} / ${e.route}\n${e.pol_name} → ${e.pod_name}`;
         el.onclick=()=>openVessel(e);
         td.insertBefore(el, b);
@@ -945,6 +946,12 @@ function bindEvents(events, byDate){
       b.remove();
     };
   });
+}
+
+// 달력 칸의 시각 옆에 붙이는 Off-hire / Guaranteed 판정 (판정이 없으면 비움)
+function hireTag(e){
+  const st = hire[e.vslvoy] && hire[e.vslvoy].status;
+  return st ? ` · <b>${esc(st)}</b>` : "";
 }
 
 // 창 제목: 모선명 옆에 모선항차(VVD)와 서비스(노선코드)를 흐리게 붙인다.
