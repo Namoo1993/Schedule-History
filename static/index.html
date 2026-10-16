@@ -918,11 +918,28 @@ const fmtRPT = (amt, teu) => teu ? (amt/teu).toLocaleString("en-US", {minimumFra
 // 이 POL 들은 한국 POD 도 항구별로 나누지 않고 'KR' 한 줄로 합친다.
 // (어느 항로에서 눌렀든 표의 POL 기준으로 적용)
 const KR_GROUP_POL = new Set(["CNSHA","CNNGB","VNHPH","CNSHK","CNXMN","THLCH","THBKK","HKHKG","CNDLC","CNYNT"]);
+// 예외: 이 서비스의 이 POL 은 한국 POD 를 항구별(KRPUS, KRKAN, KRINC ...)로 그대로 둔다.
+const KR_SPLIT = {TP2: new Set(["CNDLC"])};
 
-function groupKR(lines){
-  const out = [], kr = new Map();
+// 일본 POL 은 항구를 가리지 않고 'JP' 하나로 합친다. 같은 POD 끼리 TEU·금액을 더한다.
+const polGroup = pol => pol.startsWith("JP") ? "JP" : pol;
+function groupJP(lines){
+  const out = [], jp = new Map();
   lines.forEach(l => {
-    if(!(KR_GROUP_POL.has(l.pol) && l.pod.startsWith("KR"))) return out.push(l);
+    if(polGroup(l.pol) !== "JP") return out.push(l);
+    const g = jp.get(l.pod);
+    if(g){ g.teu += l.teu; g.amt += l.amt; g.bl += l.bl;
+           if(l.obd && (!g.obd || l.obd < g.obd)) g.obd = l.obd; return; }
+    const n = {...l, pol:"JP"};
+    jp.set(l.pod, n); out.push(n);
+  });
+  return out;
+}
+
+function groupKR(lines, svc){
+  const out = [], kr = new Map(), split = KR_SPLIT[svc];
+  lines.forEach(l => {
+    if(!(KR_GROUP_POL.has(l.pol) && l.pod.startsWith("KR")) || (split && split.has(l.pol))) return out.push(l);
     const g = kr.get(l.pol);
     if(g){ g.teu += l.teu; g.amt += l.amt; g.bl += l.bl; return; }
     const n = {...l, pod:"KR", teu:l.teu, amt:l.amt};
@@ -937,15 +954,16 @@ function polOrder(vslvoy, lines){
   const etd = new Map();
   snap.routes.forEach(r => (r.vessels||[]).forEach(v => {
     if(v.vslvoy !== vslvoy || !v.etd) return;
-    if(!etd.has(r.pol) || v.etd < etd.get(r.pol)) etd.set(r.pol, v.etd);
+    const pol = polGroup(r.pol);
+    if(!etd.has(pol) || v.etd < etd.get(pol)) etd.set(pol, v.etd);
   }));
   const key = new Map();
   lines.forEach(l => key.set(l.pol, etd.get(l.pol) || (l.obd ? l.obd + " 99:99" : "9999")));
   return key;
 }
 
-function actualsTable(lines, vslvoy){
-  lines = groupKR(lines);
+function actualsTable(lines, vslvoy, svc){
+  lines = groupKR(groupJP(lines), svc);
   // TEU 는 줄들의 합, RPT 는 금액 합계 / TEU 합계 (줄별 RPT 의 평균이 아님)
   const sum = ls => {
     const teu = ls.reduce((a, l) => a + l.teu, 0), amt = ls.reduce((a, l) => a + l.amt, 0);
@@ -981,7 +999,7 @@ function showActuals(e){
   const today = (() => { const t = new Date(); return ymd(t.getFullYear(), t.getMonth()+1, t.getDate()); })();
   if(!(lines && lines.length) && (e.etd_date || "") >= today) return openDetail(e);
   box.innerHTML = lines && lines.length
-    ? actualsTable(lines, e.vslvoy)
+    ? actualsTable(lines, e.vslvoy, e.route)
     : `<div class="msg">이 항차(${esc(e.vslvoy)})의 실적이 없습니다.<br>ICON 3562 조회 결과에 이 항차의 B/L 이 없습니다.</div>`;
 }
 
