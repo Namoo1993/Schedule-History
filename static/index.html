@@ -33,7 +33,6 @@
   }
   .row{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center;}
   h1{font-size:17px; margin:0 12px 0 0; letter-spacing:-.2px; white-space:nowrap;}
-  h1 span{color:var(--muted); font-weight:400; font-size:12px; margin-left:6px;}
   label.f{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);}
   select,input[type=search]{
     font:inherit; font-size:13px; color:var(--ink); background:var(--panel);
@@ -240,7 +239,6 @@
     /* 제목에 nowrap 이 걸려 있어 수집 시각 문구가 길면 화면 밖으로 밀려나
        가로 스크롤이 생겼다. 좁은 화면에서는 줄바꿈을 허용한다. */
     h1{width:100%; white-space:normal;}
-    h1 span{display:block; margin-left:0; margin-top:2px;}
     .calbar{flex-wrap:wrap}
     .vbar{flex-wrap:wrap; gap:6px}
     .vbar .lbl{flex:1 1 100%; padding-top:0}
@@ -276,7 +274,7 @@
 
 <header>
   <div class="row">
-    <h1>PCS 스케줄 달력<span id="meta"></span></h1>
+    <h1>PCS 스케줄 달력</h1>
 
     <div class="seg dir" role="group" aria-label="수출/수입">
       <button id="btnIM" aria-pressed="true">수입</button>
@@ -632,8 +630,6 @@ function render(){
   // 끌어올린다. 내려 둔 동안은 페이지 높이를 줄이지 않고, 맨 위에 있을 때만 풀어 준다.
   const pageY = window.scrollY;
   document.body.style.minHeight = pageY > 0 ? document.documentElement.scrollHeight + "px" : "";
-  $("#meta").textContent = `· ${snap.snapshot} 기준 (수집 ${snap.collected_at})` +
-    (snap.prevFrom ? ` · 전달은 ${snap.prevFrom} 수집분` : "");
   syncDirTabs();
   syncCountrySelect();
 
