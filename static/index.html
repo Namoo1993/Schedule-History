@@ -544,6 +544,10 @@ function syncCountrySelect(){
 // ---------- 화면 그리기 ----------
 function render(){
   if(!snap) return;
+  // 페이지를 내려 둔 상태에서 칩을 눌러 달력이 짧아지면 브라우저가 스크롤을 맨 위로
+  // 끌어올린다. 내려 둔 동안은 페이지 높이를 줄이지 않고, 맨 위에 있을 때만 풀어 준다.
+  const pageY = window.scrollY;
+  document.body.style.minHeight = pageY > 0 ? document.documentElement.scrollHeight + "px" : "";
   $("#meta").textContent = `· ${snap.snapshot} 기준 (수집 ${snap.collected_at})` +
     (snap.prevFrom ? ` · 전달은 ${snap.prevFrom} 수집분` : "");
   syncDirTabs();
@@ -611,6 +615,17 @@ function render(){
   }
   drawCalendar(events, inSvc.length > 0 && events.length === 0,
                all.length > 0 && inSvc.length === 0);
+  if(pageY > 0) window.scrollTo(0, pageY);
+}
+
+// 칩 칸을 다시 그려도 칸 안 스크롤 위치를 지킨다. 칸이나 페이지를 내려 둔 상태면
+// 칸 높이도 그대로 묶어 두고, 둘 다 맨 위에 있을 때만 칩 줄 수에 맞춰 높이가 다시 정해진다.
+function keepScroll(box, draw){
+  const top = box.scrollTop, h = box.offsetHeight;
+  if(top > 0 || window.scrollY > 0) box.style.height = h + "px";
+  else box.style.height = "";
+  draw();
+  box.scrollTop = top;
 }
 
 // 고른 항로에 들어 있는 서비스(노선코드)를 칩으로 만든다. 여러 개를 함께 켤 수 있고,
@@ -620,7 +635,7 @@ function syncServiceChips(all, services){
   bar.hidden = false;   // 모선 줄과 마찬가지로 자리를 지켜 달력이 흔들리지 않게 한다
   if(!services.length){
     $("#sCount").textContent = "0";
-    box.innerHTML = `<span class="none">항로를 선택하면 서비스가 여기에 표시됩니다.</span>`;
+    keepScroll(box, () => box.innerHTML = `<span class="none">항로를 선택하면 서비스가 여기에 표시됩니다.</span>`);
     return;
   }
 
@@ -629,13 +644,13 @@ function syncServiceChips(all, services){
   const on = services.filter(s => shownS.has(s)).length;
   $("#sCount").textContent = on ? `${on}/${services.length}` : services.length;
 
-  box.innerHTML = services.map(s => {
+  keepScroll(box, () => box.innerHTML = services.map(s => {
     const p = shownS.has(s);
     return `<button class="schip" data-s="${esc(s)}" aria-pressed="${p}"
               title="${esc(s)} · ${cnt.get(s)}항차 (누르면 ${p?"끄기":"켜기"})">${esc(s)}<span class="n">${cnt.get(s)}</span></button>`;
   }).join("")
   + `<button class="vchip act${on < services.length ? "" : " ghost"}" id="sAll">전체 보기</button>`
-  + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">전체 숨기기</button>`;
+  + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">전체 숨기기</button>`);
 
   box.querySelectorAll(".schip[data-s]").forEach(b => {
     b.onclick = () => {
@@ -659,7 +674,7 @@ function syncVesselChips(all, vessels, hasSvc){
   bar.hidden = false;
   if(!vessels.length){
     $("#vCount").textContent = "0";
-    box.innerHTML = `<span class="none">${hasSvc ? "서비스를 선택하면" : "항로와 서비스를 선택하면"} 모선이 여기에 표시됩니다.</span>`;
+    keepScroll(box, () => box.innerHTML = `<span class="none">${hasSvc ? "서비스를 선택하면" : "항로와 서비스를 선택하면"} 모선이 여기에 표시됩니다.</span>`);
     return;
   }
 
@@ -668,14 +683,14 @@ function syncVesselChips(all, vessels, hasSvc){
   const off = vessels.filter(v => hiddenV.has(v)).length;
   $("#vCount").textContent = off ? `${vessels.length - off}/${vessels.length}` : vessels.length;
 
-  box.innerHTML = vessels.map(v => {
+  keepScroll(box, () => box.innerHTML = vessels.map(v => {
     const on = !hiddenV.has(v);
     return `<button class="vchip" data-v="${esc(v)}" aria-pressed="${on}"
               title="${esc(v)} · ${cnt.get(v)}항차 (누르면 ${on?"숨김":"표시"})">
               <i style="--c:${col.get(v)}"></i>${esc(v)}<span class="n">${cnt.get(v)}</span></button>`;
   }).join("")
   + `<button class="vchip act${off ? "" : " ghost"}" id="vAll">전체 보기</button>`
-  + `<button class="vchip act${off < vessels.length ? "" : " ghost"}" id="vNone">전체 숨기기</button>`;
+  + `<button class="vchip act${off < vessels.length ? "" : " ghost"}" id="vNone">전체 숨기기</button>`);
 
   box.querySelectorAll(".vchip[data-v]").forEach(b => {
     b.onclick = () => {
