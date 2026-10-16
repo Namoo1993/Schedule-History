@@ -727,7 +727,7 @@ function syncServiceChips(all, services){
   keepScroll(box, () => box.innerHTML = services.map(s => {
     const p = shownS.has(s);
     return `<button class="schip" data-s="${esc(s)}" aria-pressed="${p}"
-              title="${esc(s)} · ${cnt.get(s)}항차 (누르면 ${p?"끄기":"켜기"})">${esc(s)}<span class="n">${cnt.get(s)}</span></button>`;
+              title="${esc(s)} · ${cnt.get(s)}항차 (누르면 ${p?"끄기":"켜기"})">${esc(s)}</button>`;
   }).join("")
   + `<button class="vchip act${on < services.length ? "" : " ghost"}" id="sAll">전체 보기</button>`
   + `<button class="vchip act${on ? "" : " ghost"}" id="sNone">전체 숨기기</button>`);
