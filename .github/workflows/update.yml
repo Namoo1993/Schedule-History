@@ -35,6 +35,11 @@ jobs:
           cp static/index.html _site/index.html
           # 데이터는 비밀번호로 암호화된 것만 올라와 있다 (encrypt_site.py)
           cp -r site_data _site/data
+          # 비밀번호 없는 공개판(/public/): 스케줄만, 실적·Off-hire 없음
+          mkdir -p _site/public
+          sed 's/^const PUBLIC_VIEW = false;/const PUBLIC_VIEW = true;/' static/index.html > _site/public/index.html
+          grep -q '^const PUBLIC_VIEW = true;' _site/public/index.html
+          cp -r public_data _site/public/data
 
       - uses: actions/upload-pages-artifact@v3
         with:

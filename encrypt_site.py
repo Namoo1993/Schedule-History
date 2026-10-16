@@ -5,6 +5,7 @@ GitHub Pages 에 올릴 데이터를 비밀번호로 암호화한다.
     python encrypt_site.py
 
 data/*.json (평문, git 에 올리지 않음)  ->  site_data/*.json (암호문, git 에 올림)
+                                      ->  public_data/*.json (스케줄만 평문, 비밀번호 없는 공개판)
 
 저장소와 사이트가 공개라서 평문을 올리면 주소만 알면 누구나 열 수 있다.
 그래서 올리는 쪽은 암호문만 두고, 뷰어(static/index.html)가 비밀번호로 푼다.
@@ -23,6 +24,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -33,6 +35,8 @@ SRC = BASE / "data"
 DST = BASE / "site_data"
 KEY_FILE = DST / "key.json"
 CACHE = BASE / ".enc_cache.json"
+PUB = BASE / "public_data"
+PUBLIC_RE = re.compile(r"^(\d{4}-\d{2}-\d{2}_(AM|PM)|index)\.json$")
 ITER = 200000
 
 
@@ -96,6 +100,26 @@ def main():
 
     CACHE.write_text(json.dumps(cache, indent=1), encoding="utf-8")
     print("암호화 완료: %d개 새로 암호화 / 전체 %d개 -> site_data/" % (done, len(names)))
+    copy_public()
+
+
+def copy_public():
+    """비밀번호 없는 공개판(/public/)용. 스케줄 스냅샷과 목록만 평문으로 복사한다.
+    실적(actuals.json)·Off-hire(hire.json)는 넣지 않는다."""
+    PUB.mkdir(exist_ok=True)
+    names = sorted(f.name for f in SRC.glob("*.json") if PUBLIC_RE.match(f.name))
+    done = 0
+    for name in names:
+        raw = (SRC / name).read_bytes()
+        out = PUB / name
+        if out.exists() and out.read_bytes() == raw:
+            continue
+        out.write_bytes(raw)
+        done += 1
+    for f in PUB.glob("*.json"):
+        if f.name not in names:
+            f.unlink()
+    print("공개판 복사: %d개 갱신 / 전체 %d개 -> public_data/ (스케줄만)" % (done, len(names)))
 
 
 if __name__ == "__main__":

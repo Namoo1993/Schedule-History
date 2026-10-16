@@ -112,10 +112,11 @@ W "scraper.py 종료코드: $code"
 function Push-Data([string]$What = "수집") {
     if (-not $Git) { W "경고: git 을 찾지 못해 푸시를 건너뜁니다."; return }
 
-    # 저장소·사이트가 공개라 평문(data/)은 올리지 않고 암호화한 site_data/ 만 올린다.
+    # 저장소·사이트가 공개라 평문(data/)은 올리지 않고 암호화한 site_data/ 와
+    # 스케줄만 담은 공개판 public_data/ 를 올린다. (실적·Off-hire 는 암호문으로만)
     & $Python (Join-Path $here "encrypt_site.py") 2>&1 | ForEach-Object { W "  $_" }
     if ($LASTEXITCODE -ne 0) { W "경고: 암호화 실패 - 푸시를 건너뜁니다."; return }
-    & $Git add -A -- site_data/ 2>&1 | ForEach-Object { W "  git: $_" }
+    & $Git add -A -- site_data/ public_data/ 2>&1 | ForEach-Object { W "  git: $_" }
     & $Git diff --staged --quiet
     if ($LASTEXITCODE -eq 0) { W "데이터 변경 없음 - 푸시 생략"; return }
 

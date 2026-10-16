@@ -425,6 +425,10 @@ async function getJSON(apiPath, staticPath){
   }catch(e){ return null; }
 }
 
+// 비밀번호 없는 공개 사이트(/public/)는 스케줄만 보여준다. 배포할 때 이 줄을 true 로
+// 바꿔서 올린다(.github/workflows). 공개 쪽에는 실적·Off-hire 파일이 아예 없다.
+const PUBLIC_VIEW = false;
+
 // ---------- 사이트 비밀번호 ----------
 // 저장소와 사이트가 공개라서 데이터는 비밀번호로 암호화해 올린다(AES-GCM, 키는
 // PBKDF2). 한 번 맞게 넣으면 이 기기·브라우저에 키를 기억해서 다시 묻지 않는다.
@@ -485,7 +489,7 @@ async function unlock(){
 // ---------- 초기 로드 ----------
 async function init(){
   snapshots = await getJSON("/api/snapshots", "./data/index.json") || [];
-  hire = await getJSON("/api/hire", "./data/hire.json") || {};
+  hire = PUBLIC_VIEW ? {} : await getJSON("/api/hire", "./data/hire.json") || {};
 
   if(!snapshots.length){
     $("#view").innerHTML = `<div class="note"><b>아직 수집된 데이터가 없습니다.</b>
@@ -987,7 +991,7 @@ function openDetail(e){
 // ---------- 실적 ----------
 // 수입 구간 모선은 실적을, 수출 구간은 예전처럼 스케줄 상세를 보여준다.
 // (실적은 POL 이 CN·VN·JP·TH·HK 인 B/L 만 받으므로 수출 항차에는 없다)
-const openVessel = e => dirOf(snap.routes[e.ri]) === "IM" ? openActuals(e) : openDetail(e);
+const openVessel = e => !PUBLIC_VIEW && dirOf(snap.routes[e.ri]) === "IM" ? openActuals(e) : openDetail(e);
 
 // data/actuals.json 은 icon_actuals.py 가 만든 항차별 합계다.
 let actuals = null;      // {updated, period, vvd:{VVD:[{pol,pod,pods,teu,amt,bl}]}}

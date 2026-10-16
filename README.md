@@ -238,3 +238,10 @@ B/L Profitability Inquiry 를 조회해 엑셀을 `actuals/YYYY-MM-DD_AM.xlsx` �
   이미 들어가 있던 기기는 저장된 키가 맞지 않게 되어 새 비밀번호를 다시 묻습니다.
 - 사이트에서 한 번 맞게 넣으면 그 브라우저에 키를 기억해서 다시 묻지 않습니다.
 - 로컬 뷰어(`run_viewer.bat`)는 평문을 바로 읽으므로 비밀번호를 묻지 않습니다.
+
+### 비밀번호 없는 공개판
+
+- 주소: 사이트 주소 뒤에 `/public/` (예: https://namoo1993.github.io/Schedule-History/public/)
+- 스케줄만 보여줍니다. 실적·Off-hire 는 나오지 않고, 모선을 누르면 스케줄 상세가 뜹니다.
+- 데이터는 `encrypt_site.py` 가 스케줄 스냅샷과 목록만 `public_data/` 에 평문으로 복사한 것입니다.
+  (실적 `actuals.json`·판정 `hire.json` 은 복사하지 않음)
