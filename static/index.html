@@ -181,6 +181,7 @@
   dialog::backdrop{background:rgba(10,15,25,.45);}
   .dh{padding:15px 18px; border-bottom:1px solid var(--line); border-top:4px solid var(--c); border-radius:11px 11px 0 0;}
   .dh h3{margin:0; font-size:17px; letter-spacing:-.2px;}
+  .dh h3 .vvd{color:var(--muted); font-weight:500; font-size:14px; letter-spacing:0;}
   .dh p{margin:6px 0 0; font-size:12.5px; color:var(--muted);}
   .dh p:empty{display:none;}
   /* Off-hire / Guaranteed 표시 (icon_hire.py 판정) */
@@ -851,6 +852,11 @@ function bindEvents(events, byDate){
   });
 }
 
+// 창 제목: 모선명 옆에 모선항차(VVD)를 흐리게 붙인다.
+function setTitle(e){
+  $("#dTitle").innerHTML = `${esc(e.label)}${e.vslvoy ? ` <span class="vvd">${esc(e.vslvoy)}</span>` : ""}`;
+}
+
 // 모선명 아래 줄: 판정이 있으면 Off-hire / Guaranteed, 없으면 비워 둔다.
 function setHire(e){
   const h = hire[e.vslvoy];
@@ -877,7 +883,7 @@ function openDetail(e){
   fillDetail(e);
   $("#dList").hidden = false; $("#dAct").hidden = true; $("#dSched").hidden = true;
   $("#dh").style.setProperty("--c", e.color);
-  $("#dTitle").textContent = e.label;
+  setTitle(e);
   setHire(e);
   if(!$("#dlg").open) $("#dlg").showModal();   // 실적 창에서 넘어올 때는 이미 열려 있다
 }
@@ -965,7 +971,7 @@ function showActuals(e){
 
 async function openActuals(e){
   $("#dh").style.setProperty("--c", e.color);
-  $("#dTitle").textContent = e.label;
+  setTitle(e);
   setHire(e);
   fillDetail(e);
   $("#dList").hidden = true;
