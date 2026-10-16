@@ -53,6 +53,9 @@ DATE_FROM = P + "searchMapINPTM1_input"
 DATE_TO = P + "searchMapINPTM2_input"
 POL = P + "idpol"
 POD = P + "idpod"
+# 조회조건의 Y/N/ALL 선택칸. 화면 기본값은 Y 인데 ALL 로 바꿔서 조회한다.
+CLO = P[1:] + "searchMapINPCLO"
+CLO_TEXT = "ALL"
 INQUIRY = P + "btn_search"
 TOTAL_CNT = P + "totalCnt"
 # 다운로드 버튼 id 가운데(wq_uuid_NNNN)는 화면을 열 때마다 바뀐다.
@@ -91,6 +94,16 @@ def type_into(page, sel, text):
     page.keyboard.type(text, delay=60)
     page.keyboard.press("Tab")
     page.wait_for_timeout(500)
+
+
+def select_text(page, cid, text):
+    """WebSquare 선택칸(w2selectbox)을 보이는 글자로 고른다. 고른 뒤의 글자를 돌려준다."""
+    return page.evaluate("""([cid, text]) => {
+        const c = $p.getComponentById(cid);
+        for (let i = 0; i < c.getItemCount(); i++)
+            if (c.getItemText(i) === text) { c.setSelectedIndex(i); break; }
+        return c.getText();
+    }""", [cid, text])
 
 
 def login(page, cfg):
@@ -275,8 +288,11 @@ def run(session=None, show=False, d_from=None, d_to=None):
             type_into(page, DATE_TO, d_to)
             type_into(page, POL, POL_LIST)
             page.fill(POD, "")
-            log("  조회조건: %s ~ %s, POL=%s, POD=(비움)"
-                % (page.input_value(DATE_FROM), page.input_value(DATE_TO), page.input_value(POL)))
+            clo = select_text(page, CLO, CLO_TEXT)
+            if clo != CLO_TEXT:
+                raise RuntimeError("INPCLO 선택칸을 %s 로 바꾸지 못했습니다 (현재 %s)" % (CLO_TEXT, clo))
+            log("  조회조건: %s ~ %s, POL=%s, POD=(비움), INPCLO=%s"
+                % (page.input_value(DATE_FROM), page.input_value(DATE_TO), page.input_value(POL), clo))
 
             # 서버가 가끔 timeout 을 낸다. 한 번 더 눌러 본다.
             for attempt in (1, 2):
