@@ -226,4 +226,15 @@ B/L Profitability Inquiry 를 조회해 엑셀을 `actuals/YYYY-MM-DD_AM.xlsx` �
 - 기간: 전달 1일 ~ 이번 달 말일, POL `CN,VN,JP,TH,HK`, POD 비움
 - 계정: `config.json` 의 `icon_login`
 - 운임·수익·화주명이 들어 있어 원본 `actuals/` 는 GitHub 에 올리지 않고,
-  항차·POL·POD 별 TEU·금액 합계만 `data/actuals.json` 으로 올려 뷰어에서 보여줍니다.
+  항차·POL·POD 별 TEU·금액 합계만 `data/actuals.json` 으로 만들어 뷰어에서 보여줍니다.
+
+## 9. 사이트 비밀번호
+
+저장소와 GitHub Pages 가 공개라서 데이터는 암호화한 것만 올립니다.
+
+- 평문 `data/*.json` 은 PC 에만 두고(.gitignore), `encrypt_site.py` 가 `site_data/` 에 암호문을 만듭니다.
+  자동 작업이 푸시 직전에 실행합니다. (AES-256-GCM, 키는 비밀번호에서 PBKDF2 로 만듦)
+- 비밀번호: `config.json` 의 `site_password`. 바꾸면 다음 푸시 때 전부 다시 암호화됩니다.
+  이미 들어가 있던 기기는 저장된 키가 맞지 않게 되어 새 비밀번호를 다시 묻습니다.
+- 사이트에서 한 번 맞게 넣으면 그 브라우저에 키를 기억해서 다시 묻지 않습니다.
+- 로컬 뷰어(`run_viewer.bat`)는 평문을 바로 읽으므로 비밀번호를 묻지 않습니다.

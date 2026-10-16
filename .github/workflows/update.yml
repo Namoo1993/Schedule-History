@@ -33,7 +33,8 @@ jobs:
         run: |
           mkdir -p _site
           cp static/index.html _site/index.html
-          cp -r data _site/data
+          # 데이터는 비밀번호로 암호화된 것만 올라와 있다 (encrypt_site.py)
+          cp -r site_data _site/data
 
       - uses: actions/upload-pages-artifact@v3
         with:

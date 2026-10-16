@@ -249,9 +249,29 @@
     label.f{flex:1 1 auto}
     select,input[type=search]{flex:1 1 auto; min-width:0}
   }
+  /* ---- 사이트 비밀번호 ---- */
+  .lock{position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+        background:var(--bg); padding:16px;}
+  .lock[hidden]{display:none;}
+  .lock form{width:100%; max-width:320px; border:1px solid var(--line); border-radius:12px;
+             background:var(--panel); padding:22px 20px; display:flex; flex-direction:column; gap:10px;}
+  .lock h1{margin:0 0 4px; font-size:17px;}
+  .lock input{font:inherit; font-size:15px; padding:9px 11px; border:1px solid var(--line); border-radius:8px;
+              color:var(--ink); background:var(--panel);}
+  .lock button{font:inherit; font-weight:700; padding:9px; border:0; border-radius:8px;
+               background:var(--accent); color:#fff; cursor:pointer;}
+  .lock .msg{min-height:18px; margin:0; font-size:12.5px; color:#c62828;}
 </style>
 </head>
 <body>
+<div class="lock" id="lock" hidden>
+  <form id="lockForm" autocomplete="off">
+    <h1>PCS 스케줄 달력</h1>
+    <input type="password" id="lockPw" placeholder="비밀번호" aria-label="비밀번호" autofocus>
+    <button type="submit">들어가기</button>
+    <p class="msg" id="lockMsg"></p>
+  </form>
+</div>
 <div class="wrap">
 
 <header>
@@ -398,8 +418,68 @@ async function getJSON(apiPath, staticPath){
   // 부르는 쪽 화면이 '불러오는 중' 에서 멈추므로 null 로 돌려준다.
   try{
     const r2 = await fetch(staticPath, {cache:"no-store"});
-    return r2.ok ? await r2.json() : null;
+    if(!r2.ok) return null;
+    const j = await r2.json();
+    // GitHub Pages 에는 암호화된 파일만 올라가 있다 (encrypt_site.py)
+    return (j && j.iv && j.ct) ? await decryptJSON(j) : j;
   }catch(e){ return null; }
+}
+
+// ---------- 사이트 비밀번호 ----------
+// 저장소와 사이트가 공개라서 데이터는 비밀번호로 암호화해 올린다(AES-GCM, 키는
+// PBKDF2). 한 번 맞게 넣으면 이 기기·브라우저에 키를 기억해서 다시 묻지 않는다.
+let siteKey = null;
+const KEY_STORE = "pcsSiteKey";
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const tob64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+
+async function decryptJSON(obj){
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(obj.iv)}, siteKey, unb64(obj.ct));
+  const gz = new Blob([pt]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return JSON.parse(await new Response(gz).text());
+}
+
+async function unlock(){
+  // 로컬 뷰어(server.py)는 평문을 주므로 비밀번호가 필요 없다
+  try{ if((await fetch("/api/snapshots", {cache:"no-store"})).ok) return; }catch(e){}
+  let meta, probe;
+  try{
+    meta = await (await fetch("./data/key.json", {cache:"no-store"})).json();
+    probe = await (await fetch("./data/index.json", {cache:"no-store"})).json();
+  }catch(e){ return; }   // 암호화되지 않은 배포본
+  if(!(probe && probe.iv && probe.ct)) return;
+
+  const tryKey = async raw => {
+    try{
+      siteKey = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+      await decryptJSON(probe);
+      return true;
+    }catch(e){ siteKey = null; return false; }
+  };
+  let saved = null;
+  try{ saved = localStorage.getItem(KEY_STORE); }catch(e){}
+  if(saved && await tryKey(unb64(saved))) return;
+
+  const box = $("#lock"), inp = $("#lockPw"), msg = $("#lockMsg");
+  box.hidden = false;
+  inp.focus();
+  return new Promise(resolve => {
+    $("#lockForm").onsubmit = async ev => {
+      ev.preventDefault();
+      msg.textContent = "";
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(inp.value), "PBKDF2", false, ["deriveBits"]);
+      const bits = await crypto.subtle.deriveBits(
+        {name:"PBKDF2", hash:"SHA-256", salt:unb64(meta.salt), iterations:meta.iter}, base, 256);
+      if(await tryKey(bits)){
+        try{ localStorage.setItem(KEY_STORE, tob64(bits)); }catch(e){}
+        box.hidden = true;
+        resolve();
+      }else{
+        msg.textContent = "비밀번호가 맞지 않습니다.";
+        inp.select();
+      }
+    };
+  });
 }
 
 // ---------- 초기 로드 ----------
@@ -1067,7 +1147,7 @@ window.addEventListener("resize", () => {
   if(isNarrow() !== wasNarrow){ wasNarrow = isNarrow(); if(snap) render(); }
 });
 
-init();
+unlock().then(init);
 </script>
 </body>
 </html>

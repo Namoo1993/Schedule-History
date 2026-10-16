@@ -12,5 +12,6 @@
   ],
   "months_ahead": 2,
   "headless": true,
-  "viewer_port": 8777
+  "viewer_port": 8777,
+  "site_password": "사이트_비밀번호"
 }
