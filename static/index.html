@@ -852,9 +852,10 @@ function bindEvents(events, byDate){
   });
 }
 
-// 창 제목: 모선명 옆에 모선항차(VVD)를 흐리게 붙인다.
+// 창 제목: 모선명 옆에 모선항차(VVD)와 서비스(노선코드)를 흐리게 붙인다.
 function setTitle(e){
-  $("#dTitle").innerHTML = `${esc(e.label)}${e.vslvoy ? ` <span class="vvd">${esc(e.vslvoy)}</span>` : ""}`;
+  const sub = [e.vslvoy, e.route].filter(Boolean).map(esc).join(" · ");
+  $("#dTitle").innerHTML = `${esc(e.label)}${sub ? ` <span class="vvd">${sub}</span>` : ""}`;
 }
 
 // 모선명 아래 줄: 판정이 있으면 Off-hire / Guaranteed, 없으면 비워 둔다.
