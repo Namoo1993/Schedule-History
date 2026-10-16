@@ -112,8 +112,7 @@ W "scraper.py 종료코드: $code"
 function Push-Data([string]$What = "수집") {
     if (-not $Git) { W "경고: git 을 찾지 못해 푸시를 건너뜁니다."; return }
 
-    # 실적 합계(actuals.json)와 Off-hire 판정(hire.json)은 공개 여부를 정할 때까지 올리지 않는다.
-    & $Git add -- data/ ':!data/actuals.json' ':!data/hire.json' 2>&1 | ForEach-Object { W "  git: $_" }
+    & $Git add -- data/ 2>&1 | ForEach-Object { W "  git: $_" }
     & $Git diff --staged --quiet
     if ($LASTEXITCODE -eq 0) { W "데이터 변경 없음 - 푸시 생략"; return }
 
@@ -144,6 +143,7 @@ W "icon_actuals.py 종료코드: $acode"
 & $Python (Join-Path $here "icon_hire.py") 2>&1 | ForEach-Object { W "  $_" }
 $hcode = $LASTEXITCODE
 W "icon_hire.py 종료코드: $hcode"
-# (실적·판정 파일은 지금 올리지 않으므로 여기서 따로 푸시하지 않는다)
+# 실적 합계·Off-hire 판정도 GitHub Pages 뷰어에 보이도록 올린다.
+Push-Data "실적"
 
 exit $code
