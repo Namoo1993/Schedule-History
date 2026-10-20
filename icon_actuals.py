@@ -7,6 +7,7 @@ ICON(icon.pcsline.co.kr) 3562 B/L Profitability Inquiry 실적 엑셀 내려받�
     python icon_actuals.py --session AM    # 오전 이름으로 저장
     python icon_actuals.py --show          # 브라우저 창을 띄워서 동작 확인
     python icon_actuals.py --from 20260901 --to 20261231   # 기간 직접 지정
+    python icon_actuals.py --export        # 수출 실적 (POL=KR, POD 비움) -> data/actuals_ex.json
 
 조회 기간은 전달 1일 ~ 이번 달 말일이다. (출항 전 항차는 실적이 없으므로 다음 달은 보지 않는다)
 결과: actuals/YYYY-MM-DD_AM.xlsx       원본 엑셀 (git 에 올리지 않음)
@@ -38,6 +39,9 @@ SUM_OUT = BASE / "data" / "actuals.json"
 SITE = "https://icon.pcsline.co.kr/"
 MENU_NO = "3562"
 POL_LIST = "CN,VN,JP,TH,HK"
+# 수출(--export): POL 만 한국으로 바꾸고 POD 는 비운 채 조회한다.
+POL_LIST_EX = "KR"
+SUM_OUT_EX = BASE / "data" / "actuals_ex.json"
 WAIT_MS = 20 * 60 * 1000   # 조회·다운로드는 길면 5분 넘게 걸린다고 해서 넉넉히
 
 # --- 화면 element ---------------------------------------------------------
@@ -170,7 +174,7 @@ def read_rows(path):
     return head, [r for r in ws.iter_rows(min_row=6, values_only=True) if any(r)]
 
 
-def summarize(path):
+def summarize(path, export=False):
     """항차(VVD) -> POL -> POD 별 TEU(U열) 합계와 Income S.TTL(AD열) 합계.
 
     POD 가 한국(KR) 이면 항구마다 따로, 그 밖은 나라별로 합친다 (RUVVO+RUVFP -> RU).
@@ -194,7 +198,8 @@ def summarize(path):
             continue
         if str(r[c_type] or "").strip().upper() == "FEE":
             continue
-        key = pod if pod.startswith("KR") else pod[:2]
+        # 수출은 POD 가 외국 항구라 나라로 합치지 않고 항구별로 둔다
+        key = pod if export or pod.startswith("KR") else pod[:2]
         g = agg.setdefault(vvd, {}).setdefault((pol, key), {"teu": 0.0, "amt": 0.0, "bl": 0, "pods": set()})
         g["teu"] += num(r[c_teu])
         g["amt"] += num(r[c_amt])
@@ -217,23 +222,24 @@ def summarize(path):
     return out
 
 
-def build_summary(xlsx, period):
+def build_summary(xlsx, period, export=False):
     """뷰어용 항차별 합계 파일을 만든다. (비밀번호는 나중에 붙이기로 해서 지금은 평문)"""
-    summary = summarize(xlsx)
+    summary = summarize(xlsx, export)
+    sum_out = SUM_OUT_EX if export else SUM_OUT
     payload = {
         "updated": now_kst().strftime("%Y-%m-%d %H:%M"),
         "period": period,
         "source": xlsx.name,
         "vvd": summary,
     }
-    SUM_OUT.parent.mkdir(exist_ok=True)
-    SUM_OUT.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    log("  뷰어용 실적 저장: data/%s (항차 %d개)" % (SUM_OUT.name, len(summary)))
+    sum_out.parent.mkdir(exist_ok=True)
+    sum_out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    log("  뷰어용 실적 저장: data/%s (항차 %d개)" % (sum_out.name, len(summary)))
     return True
 
 
-def latest_xlsx():
-    files = sorted(OUT.glob("????-??-??_[AP]M.xlsx"))
+def latest_xlsx(export=False):
+    files = sorted(OUT.glob("????-??-??_[AP]M%s.xlsx" % ("_EX" if export else "")))
     return files[-1] if files else None
 
 
@@ -244,7 +250,7 @@ def count_rows(path):
     return sum(1 for r in rows if r[col])
 
 
-def run(session=None, show=False, d_from=None, d_to=None):
+def run(session=None, show=False, d_from=None, d_to=None, export=False):
     cfg = load_config()
     now = now_kst()
     if session is None:
@@ -252,13 +258,14 @@ def run(session=None, show=False, d_from=None, d_to=None):
     session = session.upper()
     auto_from, auto_to = date_range(now.date())
     d_from, d_to = d_from or auto_from, d_to or auto_to
+    pol_list = POL_LIST_EX if export else POL_LIST
 
     log("=" * 60)
-    log("ICON 실적 다운로드 시작: %s %s  (기간 %s ~ %s, POL %s)"
-        % (now.strftime("%Y.%m.%d"), session, d_from, d_to, POL_LIST))
+    log("ICON %s 실적 다운로드 시작: %s %s  (기간 %s ~ %s, POL %s)"
+        % ("수출" if export else "수입", now.strftime("%Y.%m.%d"), session, d_from, d_to, pol_list))
 
     OUT.mkdir(exist_ok=True)
-    out = OUT / ("%s_%s.xlsx" % (now.strftime("%Y-%m-%d"), session))
+    out = OUT / ("%s_%s%s.xlsx" % (now.strftime("%Y-%m-%d"), session, "_EX" if export else ""))
     tmp = out.with_suffix(".part.xlsx")
     headless = cfg.get("headless", True) and not show
 
@@ -286,7 +293,7 @@ def run(session=None, show=False, d_from=None, d_to=None):
 
             type_into(page, DATE_FROM, d_from)
             type_into(page, DATE_TO, d_to)
-            type_into(page, POL, POL_LIST)
+            type_into(page, POL, pol_list)
             page.fill(POD, "")
             clo = select_text(page, CLO, CLO_TEXT)
             if clo != CLO_TEXT:
@@ -327,7 +334,7 @@ def run(session=None, show=False, d_from=None, d_to=None):
     # 검증을 통과한 파일만 최종 이름으로 바꾼다. 실패하면 이전 파일이 그대로 남는다.
     tmp.replace(out)
     log("저장 완료: actuals/%s (%.0f KB)" % (out.name, out.stat().st_size / 1024))
-    build_summary(out, [d_from, d_to])
+    build_summary(out, [d_from, d_to], export)
     return 0
 
 
@@ -340,14 +347,16 @@ if __name__ == "__main__":
     ap.add_argument("--to", dest="d_to", help="조회 종료일 YYYYMMDD")
     ap.add_argument("--build-only", action="store_true",
                     help="조회하지 않고 가장 최근 엑셀로 뷰어용 합계 파일만 다시 만든다")
+    ap.add_argument("--export", action="store_true",
+                    help="수출 실적: POL=KR, POD 비움. actuals/*_EX.xlsx, data/actuals_ex.json 에 따로 저장")
     args = ap.parse_args()
     if args.build_only:
-        x = latest_xlsx()
+        x = latest_xlsx(args.export)
         if not x:
             raise SystemExit("actuals/ 에 받은 엑셀이 없습니다.")
-        sys.exit(0 if build_summary(x, None) else 1)
+        sys.exit(0 if build_summary(x, None, args.export) else 1)
     try:
-        sys.exit(run(args.session, args.show, args.d_from, args.d_to))
+        sys.exit(run(args.session, args.show, args.d_from, args.d_to, args.export))
     except Exception as e:
         log("ICON 실적 치명적 오류: %s" % e)
         traceback.print_exc()

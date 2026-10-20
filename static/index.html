@@ -992,12 +992,16 @@ function openDetail(e){
 }
 
 // ---------- 실적 ----------
-// 수입 구간 모선은 실적을, 수출 구간은 예전처럼 스케줄 상세를 보여준다.
-// (실적은 POL 이 CN·VN·JP·TH·HK 인 B/L 만 받으므로 수출 항차에는 없다)
-const openVessel = e => !PUBLIC_VIEW && dirOf(snap.routes[e.ri]) === "IM" ? openActuals(e) : openDetail(e);
+// 수입·수출 구간 모선은 실적을, 그 밖은 스케줄 상세를 보여준다.
+const openVessel = e => {
+  const d = dirOf(snap.routes[e.ri]);
+  return !PUBLIC_VIEW && (d === "IM" || d === "EX") ? openActuals(e, d) : openDetail(e);
+};
 
-// data/actuals.json 은 icon_actuals.py 가 만든 항차별 합계다.
-let actuals = null;      // {updated, period, vvd:{VVD:[{pol,pod,pods,teu,amt,bl}]}}
+// icon_actuals.py 가 만든 항차별 합계. 수입은 data/actuals.json (POL=CN,VN,JP,TH,HK),
+// 수출은 data/actuals_ex.json (POL=KR, POD 는 항구별).
+const ACT_FILE = {IM: "actuals", EX: "actuals_ex"};
+const actuals = {};      // {IM|EX: {updated, period, vvd:{VVD:[{pol,pod,pods,teu,amt,bl}]}}}
 
 const fmtTEU = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
 const fmtRPT = (amt, teu) => teu ? (amt/teu).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) : "-";
@@ -1078,9 +1082,9 @@ function actualsTable(lines, vslvoy, svc){
   return html + `</tbody></table>`;
 }
 
-function showActuals(e){
+function showActuals(e, act){
   const box = $("#dAct");
-  const lines = actuals.vvd[e.vslvoy];
+  const lines = act.vvd[e.vslvoy];
   // 오늘 이후 출항하는 모선은 아직 실적이 없으므로 예전처럼 스케줄 상세를 보여준다.
   // (오늘 출항분도 선적 기록이 잡히기 전이면 여기로 온다)
   const today = (() => { const t = new Date(); return ymd(t.getFullYear(), t.getMonth()+1, t.getDate()); })();
@@ -1090,7 +1094,7 @@ function showActuals(e){
     : `<div class="msg">이 항차(${esc(e.vslvoy)})의 실적이 없습니다.<br>ICON 3562 조회 결과에 이 항차의 B/L 이 없습니다.</div>`;
 }
 
-async function openActuals(e){
+async function openActuals(e, dir){
   $("#dh").style.setProperty("--c", e.color);
   setTitle(e);
   setHire(e);
@@ -1109,14 +1113,15 @@ async function openActuals(e){
   box.hidden = false;
   if(!$("#dlg").open) $("#dlg").showModal();
 
-  if(actuals) return showActuals(e);
+  if(actuals[dir]) return showActuals(e, actuals[dir]);
   box.innerHTML = `<div class="msg">실적을 불러오는 중…</div>`;
-  const got = await getJSON("/api/actuals", "./data/actuals.json");
+  const f = ACT_FILE[dir];
+  const got = await getJSON("/api/" + f, "./data/" + f + ".json");
   // 실적 파일은 아직 웹(GitHub)에 올리지 않으므로 웹에서는 여기로 온다.
   // 그럴 때는 예전처럼 스케줄 상세를 보여준다.
   if(!got || got.error || !got.vvd) return openDetail(e);
-  actuals = got;
-  showActuals(e);
+  actuals[dir] = got;
+  showActuals(e, got);
 }
 
 // ---------- 이벤트 ----------

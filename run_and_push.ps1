@@ -143,6 +143,10 @@ else { Push-Data }
 $acode = $LASTEXITCODE
 W "icon_actuals.py 종료코드: $acode"
 
+# 수출 실적: POL=KR, POD 비움 -> data/actuals_ex.json
+& $Python (Join-Path $here "icon_actuals.py") --session $Session --export 2>&1 | ForEach-Object { W "  $_" }
+W "icon_actuals.py --export 종료코드: $LASTEXITCODE"
+
 # Off-hire / Guaranteed 판정. 새 항차와 출항일이 바뀐 항차만 6103 에 조회한다.
 & $Python (Join-Path $here "icon_hire.py") 2>&1 | ForEach-Object { W "  $_" }
 $hcode = $LASTEXITCODE
