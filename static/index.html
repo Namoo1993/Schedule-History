@@ -1084,7 +1084,8 @@ function actualsTable(lines, vslvoy, svc){
 
 function showActuals(e, act){
   const box = $("#dAct");
-  const lines = act.vvd[e.vslvoy];
+  // 한국→한국(KRPUS→KRINC 같은 국내 구간) 줄은 실적에서 뺀다
+  const lines = (act.vvd[e.vslvoy] || []).filter(l => !(isKR(l.pol) && isKR(l.pod)));
   // 오늘 이후 출항하는 모선은 아직 실적이 없으므로 예전처럼 스케줄 상세를 보여준다.
   // (오늘 출항분도 선적 기록이 잡히기 전이면 여기로 온다)
   const today = (() => { const t = new Date(); return ymd(t.getFullYear(), t.getMonth()+1, t.getDate()); })();
