@@ -43,9 +43,9 @@ POL_LIST = "CN,VN,JP,TH,HK"
 # 수출(--export): POL 만 한국으로 바꾸고 POD 는 비운 채 조회한다.
 POL_LIST_EX = "KR"
 SUM_OUT_EX = BASE / "data" / "actuals_ex.json"
-# 피더(--feeder): Type=FEEDER, 기준일 L.P.D, POL·POD 둘 다 JP,KR,VN. 전달·이번 달을 한 달씩 조회해서
+# 피더(--feeder): Type=FEEDER, 기준일 L.P.D, POL·POD 둘 다 CN,JP,KR,VN. 전달·이번 달을 한 달씩 조회해서
 # 월 -> 수출/수입/삼국 -> 화주별로 합친다.
-PORTS_FD = "JP,KR,VN"
+PORTS_FD = "CN,JP,KR,VN"
 SUM_OUT_FD = BASE / "data" / "actuals_fd.json"
 WAIT_MS = 20 * 60 * 1000   # 조회·다운로드는 길면 5분 넘게 걸린다고 해서 넉넉히
 
@@ -273,7 +273,7 @@ def latest_xlsx(export=False):
 # (AN·AP 열은 각각의 거래처 코드라 이름으로 판정한다)
 # 한 이름 안에 둘이 같이 나오면 앞에 있는 것이 먼저다.
 #   'APL CO PTE (CNC) C/O CMA CGM KOREA' -> APL
-# 단, Shipper 가 APL 이고 Consignee 가 CMA 인 B/L 은 CMA 로 본다 (사용자 지정).
+# 단, Shipper 가 APL·ANL 이고 Consignee 가 CMA 인 B/L 은 CMA 로 본다 (사용자 지정).
 CARRIERS = [
     ("APL", re.compile(r"\bAPL\b")),
     ("ANL", re.compile(r"\bANL\b")),
@@ -286,11 +286,13 @@ CARRIERS = [
     ("DONGJIN", re.compile(r"\bDONG\s?JIN\b")),
     ("SOFAST KOREA", re.compile(r"\bSOFAST\b")),
     ("UNITED LINE", re.compile(r"\bUNITED LINE\b")),
+    ("S1 SHIPPING", re.compile(r"\bS1 SHIPPING\b")),
+    ("PAN CONTINENTAL", re.compile(r"\bPAN\s?CON(?:TINENTAL)?\b")),
 ]
 CARRIER_ETC = "기타"
 # 뷰어 표의 화주 순서 (사용자가 불러준 순서)
 CARRIER_ORDER = ["MSC", "CMA", "APL", "ANL", "ZIM", "HMM", "HUENG A LINE", "YANGMING",
-                 "DONGJIN", "SOFAST KOREA", "UNITED LINE", CARRIER_ETC]
+                 "DONGJIN", "SOFAST KOREA", "UNITED LINE", "S1 SHIPPING", "PAN CONTINENTAL", CARRIER_ETC]
 SKIP_RE = re.compile(r"NAM\s?SUNG")   # 남성해운 건은 집계하지 않는다
 C_SHIPPER, C_CONSIGNEE = 40, 42      # AO, AQ
 
@@ -345,7 +347,7 @@ def summarize_feeder(path):
         if not d:
             continue
         who = carrier_of(shp, cne)
-        if who == "APL" and carrier_of(cne) == "CMA":
+        if who in ("APL", "ANL") and carrier_of(cne) == "CMA":
             who = "CMA"
         if not who:
             who = CARRIER_ETC
@@ -597,7 +599,7 @@ if __name__ == "__main__":
     ap.add_argument("--export", action="store_true",
                     help="수출 실적: POL=KR, POD 비움. actuals/*_EX.xlsx, data/actuals_ex.json 에 따로 저장")
     ap.add_argument("--feeder", action="store_true",
-                    help="피더 실적: FEEDER, L.P.D, POL/POD=JP,KR,VN 로 전달·이번 달을 따로 조회 -> data/actuals_fd.json")
+                    help="피더 실적: FEEDER, L.P.D, POL/POD=CN,JP,KR,VN 로 전달·이번 달을 따로 조회 -> data/actuals_fd.json")
     args = ap.parse_args()
     if args.feeder:
         if args.build_only:
