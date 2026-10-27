@@ -147,6 +147,10 @@ W "icon_actuals.py 종료코드: $acode"
 & $Python (Join-Path $here "icon_actuals.py") --session $Session --export 2>&1 | ForEach-Object { W "  $_" }
 W "icon_actuals.py --export 종료코드: $LASTEXITCODE"
 
+# 피더 실적: FEEDER, L.P.D, POL/POD=JP,KR,VN 로 전달·이번 달을 따로 조회 -> data/actuals_fd.json
+& $Python (Join-Path $here "icon_actuals.py") --session $Session --feeder 2>&1 | ForEach-Object { W "  $_" }
+W "icon_actuals.py --feeder 종료코드: $LASTEXITCODE"
+
 # Off-hire / Guaranteed 판정. 새 항차와 출항일이 바뀐 항차만 6103 에 조회한다.
 & $Python (Join-Path $here "icon_hire.py") 2>&1 | ForEach-Object { W "  $_" }
 $hcode = $LASTEXITCODE

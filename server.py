@@ -104,8 +104,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({})
             return self._send(200, f.read_text(encoding="utf-8"), "application/json; charset=utf-8")
 
-        if u.path in ("/api/actuals", "/api/actuals_ex"):
-            # 항차·POL·POD 별 실적 합계 (icon_actuals.py 가 만든다. _ex 는 수출)
+        if u.path in ("/api/actuals", "/api/actuals_ex", "/api/actuals_fd"):
+            # 항차·POL·POD 별 실적 합계 (icon_actuals.py 가 만든다. _ex 는 수출, _fd 는 피더 월·화주별)
             f = DATA / (u.path[5:] + ".json")
             if not f.exists():
                 return self._json({"error": "실적 파일이 없습니다."}, 404)
