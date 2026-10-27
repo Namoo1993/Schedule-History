@@ -227,19 +227,23 @@
         padding-top:12px; border-top:1px solid var(--line);}
   .fbar[hidden]{display:none;}
   .fnote{font-size:12px; color:var(--muted);}
+  #fdMonth{margin-left:auto;}
   .fd-card{background:var(--panel); border:1px solid var(--line); border-radius:12px;
            box-shadow:var(--shadow); overflow-x:auto;}
   .fd-card table{width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums;}
   .fd-card th{font-size:12px; font-weight:700; color:var(--muted); text-align:right; padding:8px 12px;
               border-bottom:1px solid var(--line); white-space:nowrap;
               background:color-mix(in srgb, var(--line) 25%, transparent);}
-  .fd-card thead tr:first-child th{text-align:center; color:var(--ink); font-size:13px;}
   .fd-card th.who,.fd-card td.who{text-align:left;}
   .fd-card th.m{border-left:1px solid var(--line);}
   .fd-card td{padding:8px 12px; border-bottom:1px solid var(--line); text-align:right; font-weight:600; white-space:nowrap;}
   .fd-card td.who{font-weight:800;}
   .fd-card td.m{border-left:1px solid var(--line);}
   .fd-card td.z{color:var(--muted); font-weight:400;}
+  .fd-card td.pt{text-align:left; font-weight:700;}
+  .fd-card td.who{vertical-align:top;}
+  /* 화주 소계는 옅은 파랑, 전체 합계는 진한 남색 */
+  .fd-card tr.sub td{font-weight:800; background:var(--accent-soft); color:var(--accent);}
   .fd-card tr.tot td{border:0; font-weight:800; background:var(--ink); color:#fff;}
   .fd-etc{margin:10px 2px 0; font-size:12px; color:var(--muted);}
   .fd-etc b{color:var(--ink);}
@@ -342,6 +346,7 @@
       <button data-fd="TS" aria-pressed="false">삼국</button>
     </div>
     <span class="fnote" id="fdInfo"></span>
+    <select id="fdMonth" aria-label="년월 선택"></select>
   </div>
   <div class="vbar nf" id="sbar" hidden>
     <span class="lbl">서비스 <b id="sCount"></b></span>
@@ -1166,9 +1171,12 @@ async function openActuals(e, dir){
 
 // ---------- 피더 실적 ----------
 // icon_actuals.py --feeder 가 만든 data/actuals_fd.json.
-// {updated, carriers:[...], months:{"2026-09":{period, dirs:{EX|IM|TS:{화주:{teu,amt,bl}}}, etc:[...]}}}
-// 모선별이 아니라 월별로, 화주(MSC·CMA·HMM ...)마다 한 줄씩 보여준다.
+// {updated, carriers:[...], months:{"2026-09":{period, dirs:{EX|IM|TS:{화주:{teu,amt,bl,ports:{항구:{teu,amt,bl}}}}}, etc:[...]}}}
+// 모선별이 아니라 고른 한 달 기준으로, 화주(MSC·CMA·HMM ...)마다 항구별로 보여준다.
+// 항구는 수출=POD, 수입=POL, 삼국='POL>POD'.
 let fdData = null;
+let fdMonth = null;     // 드롭다운에서 고른 년월 'YYYY-MM'
+const FD_PORT = {EX:"POD", IM:"POL", TS:"POL → POD"};
 const FD_NAME = {EX:"수출", IM:"수입", TS:"삼국"};
 const fmtNum = n => n.toLocaleString("en-US", {maximumFractionDigits:2});
 
@@ -1198,39 +1206,49 @@ async function renderFeeder(){
     fdData = got;
   }
   const months = Object.keys(fdData.months).sort();
-  $("#fdInfo").textContent = `기준일 L.P.D · ${fdData.updated} 갱신`;
-  const cell = (m, c) => (fdData.months[m].dirs[fdDir] || {})[c];
-  // 한 달이라도 실적이 있는 화주만, 정해 둔 순서(MSC·CMA·APL ... 기타)대로
-  const order = fdData.carriers || [];
-  const who = [...new Set(months.flatMap(m => Object.keys(fdData.months[m].dirs[fdDir] || {})))]
-    .sort((a, b) => ((order.indexOf(a)+1 || 999) - (order.indexOf(b)+1 || 999)) || a.localeCompare(b));
+  const t = new Date(), cur = `${t.getFullYear()}-${pad(t.getMonth()+1)}`;
   const mname = m => `${+m.slice(0,4)}년 ${+m.slice(5,7)}월`;
+  // 처음에는 이번 달(없으면 가장 최근 달)
+  if(!fdData.months[fdMonth]) fdMonth = fdData.months[cur] ? cur : months[months.length-1];
+  $("#fdMonth").innerHTML = months.slice().reverse().map(m =>
+    `<option value="${m}"${m === fdMonth ? " selected" : ""}>${mname(m)}${m === cur ? " (진행 중)" : ""}</option>`).join("");
+  $("#fdInfo").textContent = `${fdData.updated} 갱신`;
+  const groups = fdData.months[fdMonth].dirs[fdDir] || {};
+  const order = fdData.carriers || [];
+  const who = Object.keys(groups)
+    .sort((a, b) => ((order.indexOf(a)+1 || 999) - (order.indexOf(b)+1 || 999)) || a.localeCompare(b));
   if(!who.length){
     $("#view").innerHTML = `<div class="note"><b>FEEDER ${FD_NAME[fdDir]} 실적이 없습니다.</b>` +
-      `${mname(months[0])} ~ ${mname(months[months.length-1])} 조회 결과에 ${FD_NAME[fdDir]} B/L 이 없습니다.</div>`;
+      `${mname(fdMonth)} 조회 결과에 ${FD_NAME[fdDir]} B/L 이 없습니다.</div>`;
     return;
   }
-  const t = new Date(), cur = `${t.getFullYear()}-${pad(t.getMonth()+1)}`;
   // TEU 는 합, RPT 는 금액 합계 / TEU 합계
-  const pair = g => g && g.teu
+  const pair = g => g.teu
     ? `<td class="m">${fmtNum(g.teu)}</td><td>${fmtRPT(g.amt, g.teu)}</td>`
     : `<td class="m z">-</td><td class="z">-</td>`;
-  let html = `<div class="fd-card"><table><thead><tr><th class="who" rowspan="2">화주</th>` +
-    months.map(m => `<th class="m" colspan="2">${mname(m)}${m === cur ? " (진행 중)" : ""}</th>`).join("") +
-    `</tr><tr>` + months.map(() => `<th class="m">TEU</th><th>RPT</th>`).join("") + `</tr></thead><tbody>`;
+  const portName = k => esc(k).replace("&gt;", " → ");
+  let html = `<div class="fd-card"><table><thead><tr><th class="who">화주</th><th class="who">${FD_PORT[fdDir]}</th>` +
+    `<th class="m">TEU</th><th>RPT</th></tr></thead><tbody>`;
   who.forEach(c => {
-    html += `<tr><td class="who">${esc(c)}</td>` + months.map(m => pair(cell(m, c))).join("") + `</tr>`;
+    const g = groups[c];
+    const ports = Object.entries(g.ports || {}).sort((a, b) => b[1].teu - a[1].teu);
+    // 예전 형식(항구별 소계 없음) 데이터는 화주 합계 한 줄만
+    if(!ports.length){ html += `<tr><td class="who">${esc(c)}</td><td class="pt z">-</td>${pair(g)}</tr>`; return; }
+    const span = ports.length > 1 ? ports.length + 1 : 1;
+    ports.forEach(([k, p], i) => {
+      html += `<tr>${i ? "" : `<td class="who" rowspan="${span}">${esc(c)}</td>`}<td class="pt">${portName(k)}</td>${pair(p)}</tr>`;
+    });
+    if(span > 1) html += `<tr class="sub"><td class="pt">소계</td>${pair(g)}</tr>`;
   });
   if(who.length > 1){
-    html += `<tr class="tot"><td class="who">Total</td>` + months.map(m => {
-      const gs = who.map(c => cell(m, c)).filter(Boolean);
-      return pair({teu: gs.reduce((a, g) => a + g.teu, 0), amt: gs.reduce((a, g) => a + g.amt, 0)});
-    }).join("") + `</tr>`;
+    const gs = who.map(c => groups[c]);
+    html += `<tr class="tot"><td class="who" colspan="2">Total</td>` +
+      pair({teu: gs.reduce((a, g) => a + g.teu, 0), amt: gs.reduce((a, g) => a + g.amt, 0)}) + `</tr>`;
   }
   html += `</tbody></table></div>`;
   // '기타' 로 묶인 거래처 이름 (화주 목록에 없는 곳)
-  const etc = months.flatMap(m => (fdData.months[m].etc || []).filter(e => e.dir === fdDir)
-    .map(e => `${esc(e.shipper || e.consignee)} (${+m.slice(5,7)}월 ${e.bl}건 ${fmtNum(e.teu)} TEU)`));
+  const etc = (fdData.months[fdMonth].etc || []).filter(e => e.dir === fdDir)
+    .map(e => `${esc(e.shipper || e.consignee)} (${e.bl}건 ${fmtNum(e.teu)} TEU)`);
   if(etc.length) html += `<p class="fd-etc"><b>기타</b> — ${etc.join(", ")}</p>`;
   $("#view").innerHTML = html;
 }
@@ -1246,6 +1264,7 @@ $("#btnIM").onclick = () => { dirn = "IM"; country = null; hiddenV.clear(); $("#
 $("#btnEX").onclick = () => { dirn = "EX"; country = null; hiddenV.clear(); $("#q").value = ""; leaveFeeder(); };
 $("#btnFD").onclick = () => { setFeeder(true); renderFeeder(); };
 $("#fbar").querySelectorAll("[data-fd]").forEach(b => b.onclick = () => { fdDir = b.dataset.fd; renderFeeder(); });
+$("#fdMonth").onchange = e => { fdMonth = e.target.value; renderFeeder(); };
 $("#selCountry").onchange = e => { country = e.target.value; render(); };
 $("#selBasis").onchange = e => { basis = e.target.value; render(); };
 // 모선명을 입력하면 그 모선이 실린 항로와 서비스를 자동으로 켠다.

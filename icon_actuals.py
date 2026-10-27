@@ -354,13 +354,18 @@ def summarize_feeder(path):
             e = etc.setdefault((d, shp, cne), {"dir": d, "shipper": shp, "consignee": cne, "teu": 0.0, "bl": 0})
             e["teu"] += num(r[c_teu])
             e["bl"] += 1
-        g = dirs.setdefault(d, {}).setdefault(who, {"teu": 0.0, "amt": 0.0, "bl": 0})
-        g["teu"] += num(r[c_teu])
-        g["amt"] += num(r[29])   # AD열 = Income S.TTL
-        g["bl"] += 1
+        g = dirs.setdefault(d, {}).setdefault(who, {"teu": 0.0, "amt": 0.0, "bl": 0, "ports": {}})
+        # 항구별 소계: 수출은 POD, 수입은 POL, 삼국은 'POL>POD'
+        port = pod if d == "EX" else pol if d == "IM" else "%s>%s" % (pol, pod)
+        p = g["ports"].setdefault(port, {"teu": 0.0, "amt": 0.0, "bl": 0})
+        for x in (g, p):
+            x["teu"] += num(r[c_teu])
+            x["amt"] += num(r[29])   # AD열 = Income S.TTL
+            x["bl"] += 1
     for groups in dirs.values():
         for g in groups.values():
-            g["teu"], g["amt"] = round(g["teu"], 2), round(g["amt"], 2)
+            for x in [g, *g["ports"].values()]:
+                x["teu"], x["amt"] = round(x["teu"], 2), round(x["amt"], 2)
     return dirs, sorted(etc.values(), key=lambda e: -e["bl"]), skipped
 
 
