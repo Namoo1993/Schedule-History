@@ -1,6 +1,14 @@
 [
  {
   "date": "2026-10-28",
+  "session": "PM",
+  "session_kor": "오후",
+  "label": "2026.10.28 오후",
+  "vessels": 1228,
+  "collected_at": "2026-10-28 17:00:04"
+ },
+ {
+  "date": "2026-10-28",
   "session": "AM",
   "session_kor": "오전",
   "label": "2026.10.28 오전",
