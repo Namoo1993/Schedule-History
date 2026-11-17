@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>PCS 스케줄 달력</title>
+<title>Schedule</title>
 <style>
   :root{
     color-scheme:light;
@@ -69,6 +69,36 @@
   /* 조건부 버튼은 지우지 않고 투명하게만 만든다. 안 그러면 줄이 다시 접히면서
      아래 달력이 통째로 위아래로 흔들린다. */
   .ghost{visibility:hidden !important; pointer-events:none !important;}
+
+  /* ---- 조회 날짜 달력 ---- 수집 기록이 있는 날만 누를 수 있다 */
+  .dp{position:relative; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);}
+  #dpBtn{display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:13px; color:var(--ink);
+         background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px;
+         min-height:32px; cursor:pointer; font-variant-numeric:tabular-nums;}
+  #dpBtn:hover,#dpBtn[aria-expanded="true"]{border-color:var(--accent);}
+  #dpBtn svg{color:var(--muted);}
+  .dpop{position:absolute; top:calc(100% + 6px); left:0; z-index:50; width:264px; padding:10px;
+        background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+        color:var(--ink);}
+  .dpop[hidden]{display:none;}
+  .dph{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+  .dph b{font-size:14px; font-variant-numeric:tabular-nums;}
+  .dph button{font:inherit; font-size:18px; line-height:1; width:30px; height:28px; border:1px solid var(--line);
+              background:var(--panel); color:var(--ink); border-radius:7px; cursor:pointer;}
+  .dph button:hover:not(:disabled){border-color:var(--accent); color:var(--accent);}
+  .dph button:disabled{opacity:.3; cursor:default;}
+  .dpg{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center;}
+  .dpg .w{font-size:11px; font-weight:700; color:var(--muted); padding:3px 0;}
+  .dpg .w.s0{color:var(--sun)} .dpg .w.s6{color:var(--sat)}
+  .dpg button{font:inherit; font-size:12.5px; height:31px; border:0; border-radius:7px; background:0;
+              color:var(--ink); cursor:pointer; font-weight:700; font-variant-numeric:tabular-nums;}
+  .dpg button.s0{color:var(--sun)} .dpg button.s6{color:var(--sat)}
+  .dpg button:hover:not(:disabled){background:var(--accent-soft);}
+  .dpg button:disabled{color:var(--muted); opacity:.35; font-weight:400; cursor:default;}
+  .dpg button.td{box-shadow:inset 0 0 0 1px var(--accent);}
+  .dpg button.on{background:var(--accent); color:#fff;}
+  .dpf{display:flex; justify-content:flex-end; margin-top:6px; padding-top:6px; border-top:1px solid var(--line);}
+  .dpf button{font:inherit; font-size:12px; border:0; background:0; color:var(--accent); cursor:pointer; padding:3px 4px; font-weight:700;}
 
   /* ---- 모선 고르기 ---- */
   .vbar{display:flex; align-items:flex-start; gap:10px; margin-top:10px; padding-top:10px;
@@ -293,7 +323,7 @@
 <body>
 <div class="lock" id="lock" hidden>
   <form id="lockForm" autocomplete="off">
-    <h1>PCS 스케줄 달력</h1>
+    <h1>Schedule</h1>
     <input type="password" id="lockPw" placeholder="비밀번호" aria-label="비밀번호" autofocus>
     <button type="submit">들어가기</button>
     <p class="msg" id="lockMsg"></p>
@@ -303,7 +333,7 @@
 
 <header>
   <div class="row">
-    <h1>PCS 스케줄 달력</h1>
+    <h1>Schedule</h1>
 
     <div class="seg dir" role="group" aria-label="수출/수입/피더">
       <button id="btnIM" aria-pressed="true">수입</button>
@@ -311,9 +341,21 @@
       <button id="btnFD" aria-pressed="false">FEEDER</button>
     </div>
 
-    <label class="f nf">조회 날짜
-      <select id="selDate"></select>
-    </label>
+    <div class="f nf dp">조회 날짜
+      <input type="hidden" id="selDate">
+      <button type="button" id="dpBtn" aria-haspopup="dialog" aria-expanded="false">
+        <span id="dpTxt">-</span><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.5h13M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <div class="dpop" id="dpPop" role="dialog" aria-label="조회 날짜 선택" hidden>
+        <div class="dph">
+          <button type="button" id="dpPrev" aria-label="이전 달">‹</button>
+          <b id="dpTitle"></b>
+          <button type="button" id="dpNext" aria-label="다음 달">›</button>
+        </div>
+        <div class="dpg" id="dpGrid"></div>
+        <div class="dpf"><button type="button" id="dpLatest">최신날짜</button></div>
+      </div>
+    </div>
 
     <div class="seg nf" role="group" aria-label="오전/오후">
       <button id="btnAM" aria-pressed="false">오전</button>
@@ -541,13 +583,57 @@ async function init(){
     return;
   }
 
-  const dates = [...new Set(snapshots.map(s=>s.date))];
-  $("#selDate").innerHTML = dates.map(d=>`<option value="${d}">${d.replace(/-/g,".")}</option>`).join("");
+  dpDates = new Set(snapshots.map(s=>s.date));
 
   const latest = snapshots[0];
-  $("#selDate").value = latest.date;
+  setDate(latest.date);
   session = latest.session;
   await load();
+}
+
+// ---------- 조회 날짜 달력 ----------
+// 수집 기록(스냅샷)이 있는 날만 누를 수 있고, 기록이 있는 달 사이에서만 넘길 수 있다.
+let dpDates = new Set(), dpCur = {y:0, m:0};
+function setDate(d){
+  $("#selDate").value = d;
+  $("#dpTxt").textContent = d.replace(/-/g,".");
+}
+function drawPicker(){
+  const {y, m} = dpCur, ym = `${y}-${pad(m)}`;
+  const months = [...dpDates].map(d => d.slice(0,7)).sort();
+  $("#dpTitle").textContent = `${y}년 ${m}월`;
+  $("#dpPrev").disabled = ym <= months[0];
+  $("#dpNext").disabled = ym >= months[months.length-1];
+  const t = new Date(), today = ymd(t.getFullYear(), t.getMonth()+1, t.getDate());
+  const sel = $("#selDate").value;
+  let h = DOW.map((w,i) => `<span class="w s${i}">${w}</span>`).join("");
+  const lead = new Date(y, m-1, 1).getDay(), last = new Date(y, m, 0).getDate();
+  for(let i=0;i<lead;i++) h += "<span></span>";
+  for(let d=1; d<=last; d++){
+    const k = ymd(y, m, d), w = (lead + d - 1) % 7;
+    const cls = [`s${w}`, k===today?"td":"", k===sel?"on":""].join(" ");
+    h += `<button type="button" class="${cls}" data-d="${k}"${dpDates.has(k)?"":" disabled"}>${d}</button>`;
+  }
+  $("#dpGrid").innerHTML = h;
+}
+function openPicker(open){
+  $("#dpPop").hidden = !open;
+  $("#dpBtn").setAttribute("aria-expanded", open);
+  if(!open) return;
+  const v = $("#selDate").value;
+  dpCur = {y:+v.slice(0,4), m:+v.slice(5,7)};
+  drawPicker();
+  // 좁은 화면에서 달력이 오른쪽 밖으로 나가지 않게 왼쪽으로 당긴다
+  const pop = $("#dpPop");
+  pop.style.left = "0px";
+  const over = pop.getBoundingClientRect().right - (document.documentElement.clientWidth - 8);
+  if(over > 0) pop.style.left = `${-over}px`;
+}
+function pickDate(d){
+  openPicker(false);
+  if(d === $("#selDate").value) return;
+  setDate(d);
+  load();
 }
 
 function availSessions(date){
@@ -1255,7 +1341,14 @@ async function renderFeeder(){
 }
 
 // ---------- 이벤트 ----------
-$("#selDate").onchange = load;
+$("#dpBtn").onclick = () => { if(dpDates.size) openPicker($("#dpPop").hidden); };
+$("#dpPrev").onclick = () => { dpCur.m--; if(dpCur.m<1){dpCur.m=12;dpCur.y--;} drawPicker(); };
+$("#dpNext").onclick = () => { dpCur.m++; if(dpCur.m>12){dpCur.m=1;dpCur.y++;} drawPicker(); };
+$("#dpGrid").onclick = e => { const b = e.target.closest("button[data-d]"); if(b && !b.disabled) pickDate(b.dataset.d); };
+$("#dpLatest").onclick = () => pickDate(snapshots[0].date);
+// 달력 밖을 누르거나 Esc 를 누르면 닫는다
+document.addEventListener("click", e => { if(!$("#dpPop").hidden && !e.target.closest(".dp")) openPicker(false); });
+document.addEventListener("keydown", e => { if(e.key==="Escape" && !$("#dpPop").hidden){ openPicker(false); $("#dpBtn").focus(); } });
 $("#btnAM").onclick = () => { session="AM"; load(); };
 $("#btnPM").onclick = () => { session="PM"; load(); };
 // 방향을 바꿔도 반대쪽 선택은 그대로 둔다. 돌아오면 고르던 구간이 남아 있다.
