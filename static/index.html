@@ -468,6 +468,7 @@ async function getJSON(apiPath, staticPath){
 // 비밀번호 없는 공개 사이트(/public/)는 스케줄만 보여준다. 배포할 때 이 줄을 true 로
 // 바꿔서 올린다(.github/workflows). 공개 쪽에는 실적·Off-hire 파일이 아예 없다.
 const PUBLIC_VIEW = false;
+const FEEDER_ENABLED = false;   // FEEDER 화면 비활성화(2026-11-17). 다시 쓰려면 true 로.
 
 // ---------- 사이트 비밀번호 ----------
 // 저장소와 사이트가 공개라서 데이터는 비밀번호로 암호화해 올린다(AES-GCM, 키는
@@ -528,8 +529,8 @@ async function unlock(){
 
 // ---------- 초기 로드 ----------
 async function init(){
-  // 피더 실적은 공개판에 올리지 않는다
-  if(PUBLIC_VIEW) $("#btnFD").remove();
+  // 피더 실적은 공개판에 올리지 않는다. 손볼 부분이 많아 FEEDER_ENABLED 로 잠시 꺼 둔다.
+  if(PUBLIC_VIEW || !FEEDER_ENABLED) $("#btnFD").remove();
   snapshots = await getJSON("/api/snapshots", "./data/index.json") || [];
   hire = PUBLIC_VIEW ? {} : await getJSON("/api/hire", "./data/hire.json") || {};
 
