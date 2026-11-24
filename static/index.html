@@ -40,6 +40,9 @@
   }
   input[type=search]{min-width:170px;}
   select:focus,input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  /* 휴대폰에서 버튼을 빠르게 번갈아 누르면 '두 번 탭 확대' 로 오인해 반응이 늦거나
+     화면이 확대된다. 버튼·입력칸에서는 두 번 탭 확대를 끈다. */
+  button,select,input,label{touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
 
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
   .seg button{
@@ -1003,7 +1006,7 @@ function drawCalendar(events, allHidden, noSvc){
                                : `모선명을 다시 확인해 보세요. 입력칸을 누르면 수집된 모선명 목록이 나옵니다.`) + `</div>`
       : !snap.routes.some(inDir)
                     ? `<div class="note"><b>이 스냅샷에는 ${dirn==="IM"?"수입":"수출"} 구간이 없습니다.</b>양방향 수집 이전에 받은 자료입니다. 다른 날짜를 선택해 보세요.</div>`
-      : shown.size === 0
+      : ![...shown].some(i => inDir(snap.routes[i]))   // 반대 방향 탭에서 고른 항로는 세지 않는다
                     ? `<div class="note"><b>보고 싶은 항로를 선택하세요.</b>위의 항로 버튼을 누르면 그 구간의 서비스 목록이 나옵니다.</div>`
       : noSvc       ? `<div class="note"><b>서비스를 전부 숨겼습니다.</b>위 <b>서비스</b> 줄에서 보고 싶은 서비스를 누르거나 <b>전체 보기</b> 를 눌러 주세요.</div>`
                     : `<div class="note"><b>표시할 모선이 없습니다.</b>선택한 항로에 이 달의 스케줄이 없습니다.</div>`;
@@ -1273,7 +1276,9 @@ function setFeeder(on){
   feeder = on;
   $("header").classList.toggle("fd", on);
   $("#fbar").hidden = !on;
-  $("#btnFD").setAttribute("aria-pressed", on);
+  // FEEDER_ENABLED=false 면 버튼이 지워져 있다. 없는 버튼을 건드리다 예외가 나면
+  // 수출/수입 전환이 화면에 반영되지 않는다.
+  $("#btnFD")?.setAttribute("aria-pressed", on);
   if(on){
     $("#calbar").hidden = true; $("#warn").innerHTML = "";
     ["#btnIM","#btnEX"].forEach(sel => $(sel).setAttribute("aria-pressed", false));
@@ -1354,8 +1359,18 @@ $("#btnPM").onclick = () => { session="PM"; load(); };
 // 방향을 바꿔도 반대쪽 선택은 그대로 둔다. 돌아오면 고르던 구간이 남아 있다.
 // FEEDER 에서 돌아오면 스냅샷이 있으면 달력을, 없으면 '데이터 없음' 안내를 다시 그린다
 const leaveFeeder = () => { setFeeder(false); snap ? render() : snapshots.length && load(); };
-$("#btnIM").onclick = () => { dirn = "IM"; country = null; hiddenV.clear(); $("#q").value = ""; leaveFeeder(); };
-$("#btnEX").onclick = () => { dirn = "EX"; country = null; hiddenV.clear(); $("#q").value = ""; leaveFeeder(); };
+// 누르자마자 버튼 색부터 바꾸고, 달력은 그 화면이 그려진 다음에 다시 그린다.
+// 빠르게 여러 번 눌러도 달력은 마지막에 고른 방향으로 한 번만 그린다.
+let dirTimer = 0;
+const setDir = d => {
+  dirn = d; country = null; hiddenV.clear(); $("#q").value = "";
+  [["#btnIM","IM"],["#btnEX","EX"]].forEach(([sel,x]) => $(sel).setAttribute("aria-pressed", x === d));
+  clearTimeout(dirTimer);
+  requestAnimationFrame(() => { clearTimeout(dirTimer); dirTimer = setTimeout(leaveFeeder, 0); });
+};
+$("#btnIM").onpointerdown = $("#btnEX").onpointerdown = e => { if(e.button === 0) e.currentTarget.click(); e.preventDefault(); };
+$("#btnIM").onclick = () => setDir("IM");
+$("#btnEX").onclick = () => setDir("EX");
 $("#btnFD").onclick = () => { setFeeder(true); renderFeeder(); };
 $("#fbar").querySelectorAll("[data-fd]").forEach(b => b.onclick = () => { fdDir = b.dataset.fd; renderFeeder(); });
 $("#fdMonth").onchange = e => { fdMonth = e.target.value; renderFeeder(); };
